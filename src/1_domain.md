@@ -1,11 +1,8 @@
 ---
-
-# 📄 REQUIREMENTS DOCUMENT
+# REQUIREMENTS DOCUMENT
 
 ## Multi-Tenant SaaS Automated Quotation System
-
-**Version 2.0**
-
+Version 2.0
 ---
 
 # 1. System Objective
@@ -40,7 +37,7 @@ The domain layer MUST NOT depend on:
 
 ## 2.2 Layers
 
-### 1️⃣ Core (Domain)
+### 1 Core (Domain)
 
 Contains:
 
@@ -54,7 +51,7 @@ It has zero knowledge of infrastructure.
 
 ---
 
-### 2️⃣ Application Layer
+### 2️ Application Layer
 
 Primary use cases:
 
@@ -73,7 +70,7 @@ Primary use cases:
 
 ---
 
-### 3️⃣ Infrastructure (Adapters)
+### 3️ Infrastructure (Adapters)
 
 Concrete implementations:
 
@@ -85,7 +82,7 @@ Concrete implementations:
 
 ---
 
-### 4️⃣ Interface Layer (Express)
+### 4️ Interface Layer (Express)
 
 * Controllers
 * Routes
