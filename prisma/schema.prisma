@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  PAID
+}
+
+enum Role {
+  ADMIN
+  CLIENT
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String   @unique
+  plan      Plan     @default(FREE)
+  createdAt DateTime @default(now())
+
+  users     User[]
+  clients   Client[]
+  services  Service[]
+  quotes    Quote[]
+}
+
+model User {
+  id           String         @id @default(uuid())
+  companyId    String
+  company      Company        @relation(fields: [companyId], references: [id])
+  name         String
+  email        String         @unique
+  passwordHash String
+  role         Role           @default(CLIENT)
+  createdAt    DateTime       @default(now())
+
+  refreshTokens RefreshToken[]
+  clients       Client[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique @db.VarChar(500)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  name      String?
+  phone     String
+  email     String?
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  quotes    Quote[]
+
+  @@unique([companyId, phone])
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  name        String
+  description String?  @db.Text
+  basePrice   Decimal  @db.Decimal(10, 2)
+  taxRate     Decimal  @db.Decimal(5, 2)
+  createdAt   DateTime @default(now())
+
+  quoteItems  QuoteItem[]
+}
+
+model Quote {
+  id          String      @id @default(uuid())
+  companyId   String
+  company     Company     @relation(fields: [companyId], references: [id])
+  clientId    String
+  client      Client      @relation(fields: [clientId], references: [id])
+  status      QuoteStatus @default(DRAFT)
+  subtotal    Decimal     @db.Decimal(10, 2)
+  tax         Decimal     @db.Decimal(10, 2)
+  total       Decimal     @db.Decimal(10, 2)
+  expiresAt   DateTime
+  createdAt   DateTime    @default(now())
+
+  items       QuoteItem[]
+}
+
+model QuoteItem {
+  id         String  @id @default(uuid())
+  quoteId    String
+  quote      Quote   @relation(fields: [quoteId], references: [id])
+  serviceId  String
+  service    Service @relation(fields: [serviceId], references: [id])
+  quantity   Int
+  unitPrice  Decimal @db.Decimal(10, 2)
+  total      Decimal @db.Decimal(10, 2)
+}
