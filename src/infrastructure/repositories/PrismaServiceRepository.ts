@@ -21,7 +21,7 @@ export class PrismaServiceRepository implements IServiceRepository {
       ...created,
       basePrice: Number(created.basePrice),
       taxRate: Number(created.taxRate),
-    });
+    } as any);
   }
 
   public async findById(id: string): Promise<Service | null> {
@@ -35,7 +35,7 @@ export class PrismaServiceRepository implements IServiceRepository {
       ...service,
       basePrice: Number(service.basePrice),
       taxRate: Number(service.taxRate),
-    });
+    }as any);
   }
 
   public async findByCompanyId(companyId: string): Promise<Service[]> {
@@ -67,7 +67,7 @@ export class PrismaServiceRepository implements IServiceRepository {
       ...updated,
       basePrice: Number(updated.basePrice),
       taxRate: Number(updated.taxRate),
-    });
+    } as any);
   }
 
   public async delete(id: string): Promise<void> {

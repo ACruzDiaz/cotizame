@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 // Repositories
 import { PrismaUserRepository } from '../../infrastructure/repositories/PrismaUserRepository';
+import { Role } from '../../domain/entities/User';
 import { PrismaCompanyRepository } from '../../infrastructure/repositories/PrismaCompanyRepository';
 import { PrismaClientRepository } from '../../infrastructure/repositories/PrismaClientRepository';
 import { PrismaRefreshTokenRepository } from '../../infrastructure/repositories/PrismaRefreshTokenRepository';
@@ -86,7 +87,7 @@ router.post('/quotes/:id/send-whatsapp', authMiddleware.handle, quoteCtrl.sendWh
 router.post('/services', authMiddleware.handle, serviceCtrl.createHandler);
 router.get('/services', authMiddleware.handle, serviceCtrl.getAllHandler);
 router.patch('/services/:id', authMiddleware.handle, serviceCtrl.updateHandler);
-router.delete('/services/:id', authMiddleware.handle, serviceCtrl.deleteHandler);
+router.delete('/services/:id', authMiddleware.handle, authMiddleware.roleRequired([Role.ADMIN]), serviceCtrl.deleteHandler);
 
 // Clients (Protected)
 router.get('/clients', authMiddleware.handle, clientCtrl.getAllHandler);
