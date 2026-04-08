@@ -9,84 +9,114 @@ generator dbml {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+enum CompanyTier {
+  free
+  premium
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum QuoteStatus {
+  pending
+  complete
+  closed
 }
 
 model Client {
-  id            String   @id
-  company_phone String
-  client_phone  String
+  id            String    @id @default(uuid())
+  companyId     String
+  clientPhone   String
   name          String?
-  registered_at DateTime @default(now())
-  Company       Company  @relation(fields: [company_phone], references: [phone_number], onDelete: Cascade)
-  Quote         Quote[]
+  registeredAt  DateTime  @default(now()) @db.Timestamptz
 
-  @@unique([client_phone, company_phone])
+  // Relations
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  quotes  Quote[]
+
+  @@unique([clientPhone, companyId])
 }
 
 model Company {
-  phone_number  String         @id
-  name          String
-  tier          String         @default("free")
-  created_at    DateTime       @default(now())
-  updated_at    DateTime
-  Client        Client[]
-  CompanySecret CompanySecret?
-  Product       Product[]
-  Quote         Quote[]
-  User          User[]
+  id           String      @id @default(uuid())
+  phoneNumber  String      @unique
+  name         String
+  tier         CompanyTier @default(free)
+  createdAt    DateTime    @default(now())  @db.Timestamptz
+  updatedAt    DateTime    @db.Timestamptz
+
+  // Relations
+  clients        Client[]
+  products       Product[]
+  quotes         Quote[]
+  users          User[]
+  companySecret  CompanySecret?
 }
 
 model CompanySecret {
-  id                  String  @id
-  company_phone       String  @unique
-  whatsapp_token_hash String
-  phone_number_id     String
-  Company             Company @relation(fields: [company_phone], references: [phone_number], onDelete: Cascade)
+  companyId          String @id
+  whatsappTokenHash  String
+  phoneNumberId      String
+
+  // Relations
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
 
 model Product {
-  id                  String      @id
-  company_phone       String
-  name                String
-  parameters          Json
-  description         String
-  notes               String?
-  base_price          Decimal
-  dynamic_pricing_dsl Json
-  Company             Company     @relation(fields: [company_phone], references: [phone_number], onDelete: Cascade)
-  QuoteItem           QuoteItem[]
+  id                 String    @id @default(uuid())
+  companyId          String
+  name               String
+  parameters         Json
+  description        String
+  notes              String?
+  basePrice          Decimal
+  dynamicPricingDsl  Json
+  deletedAt          DateTime?   @db.Timestamptz
+
+  // Relations
+  company Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  quoteItems QuoteItem[]
 }
 
 model Quote {
-  id            String      @id
-  company_phone String
-  client_id     String
-  status        String      @default("pending")
-  total_amount  Decimal
-  pdf_url       String?
-  created_at    DateTime    @default(now())
-  Client        Client      @relation(fields: [client_id], references: [id], onDelete: Cascade)
-  Company       Company     @relation(fields: [company_phone], references: [phone_number], onDelete: Cascade)
-  QuoteItem     QuoteItem[]
+  id           String       @id @default(uuid())
+  companyId    String
+  clientId     String
+  status       QuoteStatus  @default(pending)
+  totalAmount  Decimal
+  pdfUrl       String?
+  createdAt    DateTime     @default(now())  @db.Timestamptz
+
+  // Relations
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  items     QuoteItem[]
 }
 
 model QuoteItem {
-  id               String  @id
-  quote_id         String
-  product_id       String
-  parameters       Json
-  calculated_price Decimal
-  Product          Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  Quote            Quote   @relation(fields: [quote_id], references: [id], onDelete: Cascade)
+  id              String   @id @default(uuid())
+  quoteId         String
+  productId       String
+  parameters      Json
+  calculatedPrice Decimal
+
+  // Relations
+  quote   Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id            String   @id
-  company_phone String
-  email         String   @unique
-  password_hash String
-  role          String   @default("ADMIN")
-  created_at    DateTime @default(now())
-  Company       Company  @relation(fields: [company_phone], references: [phone_number], onDelete: Cascade)
+  id           String    @id @default(uuid())
+  companyId    String
+  email        String    @unique
+  passwordHash String
+  role         UserRole  @default(ADMIN)
+  createdAt    DateTime  @default(now())   @db.Timestamptz
+
+  // Relations
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }

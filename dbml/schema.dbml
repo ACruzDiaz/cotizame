@@ -4,97 +4,114 @@
 
 Table Client {
   id String [pk]
-  company_phone String [not null]
-  client_phone String [not null]
+  companyId String [not null]
+  clientPhone String [not null]
   name String
-  registered_at DateTime [default: `now()`, not null]
-  Company Company [not null]
-  Quote Quote [not null]
+  registeredAt DateTime [default: `now()`, not null]
+  company Company [not null]
+  quotes Quote [not null]
 
   indexes {
-    (client_phone, company_phone) [unique]
+    (clientPhone, companyId) [unique]
   }
 }
 
 Table Company {
-  phone_number String [pk]
+  id String [pk]
+  phoneNumber String [unique, not null]
   name String [not null]
-  tier String [not null, default: 'free']
-  created_at DateTime [default: `now()`, not null]
-  updated_at DateTime [not null]
-  Client Client [not null]
-  CompanySecret CompanySecret
-  Product Product [not null]
-  Quote Quote [not null]
-  User User [not null]
+  tier CompanyTier [not null, default: 'free']
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  clients Client [not null]
+  products Product [not null]
+  quotes Quote [not null]
+  users User [not null]
+  companySecret CompanySecret
 }
 
 Table CompanySecret {
-  id String [pk]
-  company_phone String [unique, not null]
-  whatsapp_token_hash String [not null]
-  phone_number_id String [not null]
-  Company Company [not null]
+  companyId String [pk]
+  whatsappTokenHash String [not null]
+  phoneNumberId String [not null]
+  company Company [not null]
 }
 
 Table Product {
   id String [pk]
-  company_phone String [not null]
+  companyId String [not null]
   name String [not null]
   parameters Json [not null]
   description String [not null]
   notes String
-  base_price Decimal [not null]
-  dynamic_pricing_dsl Json [not null]
-  Company Company [not null]
-  QuoteItem QuoteItem [not null]
+  basePrice Decimal [not null]
+  dynamicPricingDsl Json [not null]
+  deletedAt DateTime
+  company Company [not null]
+  quoteItems QuoteItem [not null]
 }
 
 Table Quote {
   id String [pk]
-  company_phone String [not null]
-  client_id String [not null]
-  status String [not null, default: 'pending']
-  total_amount Decimal [not null]
-  pdf_url String
-  created_at DateTime [default: `now()`, not null]
-  Client Client [not null]
-  Company Company [not null]
-  QuoteItem QuoteItem [not null]
+  companyId String [not null]
+  clientId String [not null]
+  status QuoteStatus [not null, default: 'pending']
+  totalAmount Decimal [not null]
+  pdfUrl String
+  createdAt DateTime [default: `now()`, not null]
+  company Company [not null]
+  client Client [not null]
+  items QuoteItem [not null]
 }
 
 Table QuoteItem {
   id String [pk]
-  quote_id String [not null]
-  product_id String [not null]
+  quoteId String [not null]
+  productId String [not null]
   parameters Json [not null]
-  calculated_price Decimal [not null]
-  Product Product [not null]
-  Quote Quote [not null]
+  calculatedPrice Decimal [not null]
+  quote Quote [not null]
+  product Product [not null]
 }
 
 Table User {
   id String [pk]
-  company_phone String [not null]
+  companyId String [not null]
   email String [unique, not null]
-  password_hash String [not null]
-  role String [not null, default: 'ADMIN']
-  created_at DateTime [default: `now()`, not null]
-  Company Company [not null]
+  passwordHash String [not null]
+  role UserRole [not null, default: 'ADMIN']
+  createdAt DateTime [default: `now()`, not null]
+  company Company [not null]
 }
 
-Ref: Client.company_phone > Company.phone_number [delete: Cascade]
+Enum CompanyTier {
+  free
+  premium
+}
 
-Ref: CompanySecret.company_phone - Company.phone_number [delete: Cascade]
+Enum UserRole {
+  ADMIN
+  USER
+}
 
-Ref: Product.company_phone > Company.phone_number [delete: Cascade]
+Enum QuoteStatus {
+  pending
+  complete
+  closed
+}
 
-Ref: Quote.client_id > Client.id [delete: Cascade]
+Ref: Client.companyId > Company.id [delete: Cascade]
 
-Ref: Quote.company_phone > Company.phone_number [delete: Cascade]
+Ref: CompanySecret.companyId - Company.id [delete: Cascade]
 
-Ref: QuoteItem.product_id > Product.id [delete: Cascade]
+Ref: Product.companyId > Company.id [delete: Cascade]
 
-Ref: QuoteItem.quote_id > Quote.id [delete: Cascade]
+Ref: Quote.companyId > Company.id [delete: Cascade]
 
-Ref: User.company_phone > Company.phone_number [delete: Cascade]
+Ref: Quote.clientId > Client.id [delete: Cascade]
+
+Ref: QuoteItem.quoteId > Quote.id [delete: Cascade]
+
+Ref: QuoteItem.productId > Product.id [delete: Cascade]
+
+Ref: User.companyId > Company.id [delete: Cascade]

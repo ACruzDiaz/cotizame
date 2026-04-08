@@ -9,26 +9,22 @@ import type {
 //Create types for custom payload response from DB
 type CompanyCreatePayload = Prisma.CompanySecretGetPayload<{
   select: {
-    companyId:true
+    companyId: true;
   };
 }>;
 
 class CompanyService {
   constructor() {}
 
-  public async create(
-    phoneNumber: string,
-    name: string,
-    createdAt: Date,
-    updatedAt: Date,
-  ): Promise<Company> {
+  public async create(phoneNumber: string, name: string): Promise<Company> {
     try {
+      //TODO. Check company phone number does not exist
       return await prisma.company.create({
         data: {
           phoneNumber,
           name,
-          createdAt,
-          updatedAt,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         },
       });
     } catch (error) {
@@ -39,7 +35,7 @@ class CompanyService {
   public async assignSecret(
     companyId: string,
     whatsappTokenHash: string,
-    phoneNumberId: string,
+    phoneNumberId: string
   ): Promise<CompanyCreatePayload> {
     try {
       return await prisma.companySecret.upsert({
@@ -53,9 +49,9 @@ class CompanyService {
           whatsappTokenHash,
           phoneNumberId,
         },
-        select:{
+        select: {
           companyId: true,
-        }
+        },
       });
     } catch (error) {
       throw new Error(`Failed to assign secret. Details: ${error}`);
@@ -69,7 +65,7 @@ class CompanyService {
       });
     } catch (error) {
       throw new Error(
-        `Failed to get company by phone number. Details: ${error}`,
+        `Failed to get company by phone number. Details: ${error}`
       );
     }
   }
@@ -88,7 +84,10 @@ class CompanyService {
     try {
       return await prisma.company.update({
         where: { id },
-        data: { tier },
+        data: {
+          tier,
+          updatedAt: new Date().toISOString(),
+        },
       });
     } catch (error) {
       throw new Error(`Failed to update company tier. Details: ${error}`);
