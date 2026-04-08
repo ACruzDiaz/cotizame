@@ -2,16 +2,19 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    "rootDir": "",
+    "rootDir": "./",
     "outDir": "./dist",
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "node16",
-    "target": "esnext",
+    "module": "ESNext",
+    "moduleResolution":"bundler",
+    "target": "ES2023",
+    // "ignoreDeprecations": "6.0",
+    "esModuleInterop": true,
     // For nodejs:
     "lib": ["esnext"],
-    "types": ["node"],
+    "types": ["node", "prisma"],
     // and npm install -D @types/node
 
     // Other Outputs

@@ -1,0 +1,100 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table Client {
+  id String [pk]
+  company_phone String [not null]
+  client_phone String [not null]
+  name String
+  registered_at DateTime [default: `now()`, not null]
+  Company Company [not null]
+  Quote Quote [not null]
+
+  indexes {
+    (client_phone, company_phone) [unique]
+  }
+}
+
+Table Company {
+  phone_number String [pk]
+  name String [not null]
+  tier String [not null, default: 'free']
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
+  Client Client [not null]
+  CompanySecret CompanySecret
+  Product Product [not null]
+  Quote Quote [not null]
+  User User [not null]
+}
+
+Table CompanySecret {
+  id String [pk]
+  company_phone String [unique, not null]
+  whatsapp_token_hash String [not null]
+  phone_number_id String [not null]
+  Company Company [not null]
+}
+
+Table Product {
+  id String [pk]
+  company_phone String [not null]
+  name String [not null]
+  parameters Json [not null]
+  description String [not null]
+  notes String
+  base_price Decimal [not null]
+  dynamic_pricing_dsl Json [not null]
+  Company Company [not null]
+  QuoteItem QuoteItem [not null]
+}
+
+Table Quote {
+  id String [pk]
+  company_phone String [not null]
+  client_id String [not null]
+  status String [not null, default: 'pending']
+  total_amount Decimal [not null]
+  pdf_url String
+  created_at DateTime [default: `now()`, not null]
+  Client Client [not null]
+  Company Company [not null]
+  QuoteItem QuoteItem [not null]
+}
+
+Table QuoteItem {
+  id String [pk]
+  quote_id String [not null]
+  product_id String [not null]
+  parameters Json [not null]
+  calculated_price Decimal [not null]
+  Product Product [not null]
+  Quote Quote [not null]
+}
+
+Table User {
+  id String [pk]
+  company_phone String [not null]
+  email String [unique, not null]
+  password_hash String [not null]
+  role String [not null, default: 'ADMIN']
+  created_at DateTime [default: `now()`, not null]
+  Company Company [not null]
+}
+
+Ref: Client.company_phone > Company.phone_number [delete: Cascade]
+
+Ref: CompanySecret.company_phone - Company.phone_number [delete: Cascade]
+
+Ref: Product.company_phone > Company.phone_number [delete: Cascade]
+
+Ref: Quote.client_id > Client.id [delete: Cascade]
+
+Ref: Quote.company_phone > Company.phone_number [delete: Cascade]
+
+Ref: QuoteItem.product_id > Product.id [delete: Cascade]
+
+Ref: QuoteItem.quote_id > Quote.id [delete: Cascade]
+
+Ref: User.company_phone > Company.phone_number [delete: Cascade]

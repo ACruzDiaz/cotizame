@@ -1,19 +1,30 @@
-import { PrismaClient } from "../../generated/prisma/client.js";
-import type { CompanyModel, CompanyCreateInput, ProductModel, CompanyGetPayload } from "../../generated/prisma/models.js"
+import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+import { PrismaClient } from "../../generated/prisma/client";
+const connectionString = `${process.env.DATABASE_URL}`;
+const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
-const dave = PrismaClient
-const alan : CompanyCreateInput = {
-  name: 'alan',
-  phone_number: "234234",
-  updated_at: ""
+const setData = async() => {
+  return await prisma.company.create({
+    data: {
+      name: "deloite",
+      phone_number: '3132111323',
+      updated_at: new Date(),
+    }
+  })
 }
-const getCompanies= async ()=>{
+
+const getData = async() => {
   return await prisma.company.findMany()
-
 }
 
-console.log(await getCompanies());
+const inOrder = async() =>{
+  const res = await setData()
+  console.log(res);
+
+  const data = await getData()
+  console.log(data);
+}
+
+inOrder()
