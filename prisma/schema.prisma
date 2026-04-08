@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Client {
+  id            String   @id
+  company_phone String
+  client_phone  String
+  name          String?
+  registered_at DateTime @default(now())
+  Company       Company  @relation(fields: [company_phone], references: [phone_number], onDelete: Cascade)
+  Quote         Quote[]
+
+  @@unique([client_phone, company_phone])
+}
+
+model Company {
+  phone_number  String         @id
+  name          String
+  tier          String         @default("free")
+  created_at    DateTime       @default(now())
+  updated_at    DateTime
+  Client        Client[]
+  CompanySecret CompanySecret?
+  Product       Product[]
+  Quote         Quote[]
+  User          User[]
+}
+
+model CompanySecret {
+  id                  String  @id
+  company_phone       String  @unique
+  whatsapp_token_hash String
+  phone_number_id     String
+  Company             Company @relation(fields: [company_phone], references: [phone_number], onDelete: Cascade)
+}
+
+model Product {
+  id                  String      @id
+  company_phone       String
+  name                String
+  parameters          Json
+  description         String
+  notes               String?
+  base_price          Decimal
+  dynamic_pricing_dsl Json
+  Company             Company     @relation(fields: [company_phone], references: [phone_number], onDelete: Cascade)
+  QuoteItem           QuoteItem[]
+}
+
+model Quote {
+  id            String      @id
+  company_phone String
+  client_id     String
+  status        String      @default("pending")
+  total_amount  Decimal
+  pdf_url       String?
+  created_at    DateTime    @default(now())
+  Client        Client      @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  Company       Company     @relation(fields: [company_phone], references: [phone_number], onDelete: Cascade)
+  QuoteItem     QuoteItem[]
+}
+
+model QuoteItem {
+  id               String  @id
+  quote_id         String
+  product_id       String
+  parameters       Json
+  calculated_price Decimal
+  Product          Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  Quote            Quote   @relation(fields: [quote_id], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String   @id
+  company_phone String
+  email         String   @unique
+  password_hash String
+  role          String   @default("ADMIN")
+  created_at    DateTime @default(now())
+  Company       Company  @relation(fields: [company_phone], references: [phone_number], onDelete: Cascade)
+}
