@@ -30,11 +30,15 @@ const getByPropertySchema = z.object({
   name: z.string().trim().optional(),
 });
 
+const getAllSchema = z.object({
+  companyId: z.uuid("Invalid UUID")
+})
+
 export type CreateInput = z.infer<typeof createSchema>;
 export type RemoveInput = z.infer<typeof removeSchema>;
 export type UpdateInput = z.infer<typeof updateSchema>;
 export type GetByPropertyInput = z.infer<typeof getByPropertySchema>;
-
+export type GetAllInput = z.infer<typeof getAllSchema>
 export class ProductRequestDTO {
   constructor() {}
 
@@ -65,6 +69,13 @@ export class ProductRequestDTO {
   public static getByProperty(data: unknown): GetByPropertyInput {
     try {
       return getByPropertySchema.parse(data);
+    } catch (err) {
+      throw err;
+    }
+  }
+  public static getAll(data: unknown): GetAllInput {
+    try {
+      return getAllSchema.parse(data);
     } catch (err) {
       throw err;
     }

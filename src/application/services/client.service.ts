@@ -6,13 +6,13 @@ export class ClientService {
 
   public async create(
     data: Prisma.ClientUncheckedCreateInput,
-  ): Promise<{ id: string }> {
+  ): Promise<Client> {
     try {
       return await prisma.client.create({
-        data,
-        select: {
-          id: true,
-        },
+        data:{
+          ...data,
+          registeredAt: new Date()
+        }
       });
     } catch (error) {
       throw new Error(`Failed to create a Client. Details: ${error}`);

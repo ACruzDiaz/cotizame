@@ -13,18 +13,22 @@ type CompanyCreatePayload = Prisma.CompanySecretGetPayload<{
   };
 }>;
 
-class CompanyService {
+export class CompanyService {
   constructor() {}
 
-  public async create(phoneNumber: string, name: string): Promise<Company> {
+  public async create(data : Prisma.CompanyUncheckedCreateInput): Promise<Company> {
     try {
-      //TODO. Check company phone number does not exist
+      const existing = await prisma.company.findUnique({
+        where: { phoneNumber: data.phoneNumber },
+      });
+      if (existing) {
+        throw new Error("Phone number already registered");
+      }
       return await prisma.company.create({
         data: {
-          phoneNumber,
-          name,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       });
     } catch (error) {

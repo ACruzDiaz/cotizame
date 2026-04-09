@@ -47,7 +47,7 @@ model Company {
   name         String
   tier         CompanyTier @default(free)
   createdAt    DateTime    @default(now())  @db.Timestamptz
-  updatedAt    DateTime    @db.Timestamptz
+  updatedAt    DateTime?    @db.Timestamptz
 
   // Relations
   clients        Client[]

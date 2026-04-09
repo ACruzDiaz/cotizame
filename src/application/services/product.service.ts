@@ -1,6 +1,7 @@
 import { prisma } from "../connection/prismaClient";
 import type { DynamicPricingDsl } from "../../engine/dsl.types";
 import type { Prisma, Product } from "../../generated/prisma/client";
+import type { ProductWhereInput } from "../../generated/prisma/models";
 
 //TODO. Cambiar a ProductServiceImpl y crear una interface ProductService
 
@@ -15,7 +16,7 @@ type ProductDeletePayload = Prisma.ProductGetPayload<{
     id: true;
   };
 }>;
-class ProductService {
+export class ProductService {
   constructor() {}
 
   public async create(
@@ -78,15 +79,27 @@ class ProductService {
     }
   }
 
+  //En caso de que la empresa tenga demasiados productos. Implementar una respuesta con paginacion
+  // Agregar una funcion para ocultar productos. En caso de que la empresa no lo quiera prestar temporalmente.
+  public async getAll(cid:string): Promise<Product[]> {
+    try {
+      return await prisma.product.findMany({
+        where: {
+          companyId:cid,
+          deletedAt: null,
+        },
+      });
+    } catch (error) {
+      throw new Error(`Failed to get all products. details ${error}`);
+    }
+  }
   public async getByProperty(
     where: Prisma.ProductWhereInput
   ): Promise<Product[]> {
     try {
       return await prisma.product.findMany({
         where: {
-          AND: [
-            where, 
-            { deletedAt: null }],
+          AND: [where, { deletedAt: null }],
         },
       });
     } catch (error) {

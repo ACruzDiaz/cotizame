@@ -7,7 +7,8 @@ const createSchema = z.object({
     .string()
     .trim()
     .min(2, "Name must be at least 2 characters")
-    .optional(),
+    .optional()
+    .transform((val) => val ?? null),
 });
 
 const updateSchema = z.object({
@@ -37,10 +38,25 @@ const getByIdSchema = z.object({
   id: z.uuid("Invalid UUID"),
 });
 
+const companyPhoneSchema = z.object({
+  companyPhone: z
+    .string()
+    .regex(/^\+?[0-9]+$/, "Invalid phone number format")
+});
+
+const clientPhoneSchema = z.object({
+  clientPhone: z
+    .string()
+    .regex(/^\+?[0-9]+$/, "Invalid phone number format")
+});
+
+
 export type CreateInput = z.infer<typeof createSchema>;
 export type UpdateInput = z.infer<typeof updateSchema>;
 export type GetByPropertyInput = z.infer<typeof getByPropertySchema>;
 export type GetByIdInput = z.infer<typeof getByIdSchema>;
+export type CompanyPhoneInput = z.infer<typeof companyPhoneSchema>;
+export type ClientPhoneInput = z.infer<typeof clientPhoneSchema>;
 
 export class ClientRequestDTO {
   constructor() {}
@@ -72,6 +88,20 @@ export class ClientRequestDTO {
   public static getById(data: unknown): GetByIdInput {
     try {
       return getByIdSchema.parse(data);
+    } catch (err) {
+      throw err;
+    }
+  }
+  public static companyPhone(data: unknown): CompanyPhoneInput {
+    try {
+      return companyPhoneSchema.parse(data);
+    } catch (err) {
+      throw err;
+    }
+  }
+  public static clientPhone(data: unknown): ClientPhoneInput {
+    try {
+      return clientPhoneSchema.parse(data);
     } catch (err) {
       throw err;
     }
