@@ -8,7 +8,7 @@ import {
 } from "@google/genai";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
-class AiServiceImpl implements AiService{
+class GeminiServiceImpl implements AiService{
   constructor() {}
 
   public async replyStructured(
