@@ -20,7 +20,9 @@
     "typescript": "^6.0.2"
   },
   "dependencies": {
+    "@google/genai": "^1.48.0",
     "@prisma/client": "^7.6.0",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "zod-to-json-schema": "^3.25.2"
   }
 }
