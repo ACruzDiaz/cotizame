@@ -1,15 +1,13 @@
 import { prisma } from "../connection/prismaClient";
 import type { Prisma, QuoteItem } from "../../generated/prisma/client";
-  //Este objeto debe ser inmutable
+//Este objeto debe ser inmutable
 
 export class QuoteItemService {
   constructor() {}
 
-  private calculatePrice(){
-
-  }
+  private calculatePrice() {}
   public async create(
-    data: Prisma.QuoteItemUncheckedCreateInput,
+    data: Prisma.QuoteItemUncheckedCreateInput
   ): Promise<{ id: string }> {
     try {
       return await prisma.quoteItem.create({
@@ -39,7 +37,7 @@ export class QuoteItemService {
   //Este objeto debe ser inmutable
 
   public async getByProperty(
-    where: Prisma.QuoteItemWhereInput,
+    where: Prisma.QuoteItemWhereInput
   ): Promise<QuoteItem[]> {
     try {
       return await prisma.quoteItem.findMany({
@@ -57,6 +55,19 @@ export class QuoteItemService {
       });
     } catch (error) {
       throw new Error(`Failed to get quoteItem by id. details ${error}`);
+    }
+  }
+  public async getLast(quoteId:string): Promise<QuoteItem | null> {
+    try {
+      return await prisma.quoteItem.findFirst({
+        
+        orderBy: {
+          createdAt: "desc", // orden descendente
+        },
+        where: {quoteId}
+      });
+    } catch (error) {
+      throw new Error(`Failed to get last quoteItem. details: ${error}`);
     }
   }
 }

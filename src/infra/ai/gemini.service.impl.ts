@@ -1,4 +1,4 @@
-import { parametersToZod } from "../dynamicType/airesponse.t";
+import { parametersToZod } from "./helpers/productParser";
 import type { AiService } from "./ai.service";
 import "dotenv/config";
 import {
@@ -6,17 +6,18 @@ import {
   ThinkingLevel,
   GenerateContentResponse,
 } from "@google/genai";
+import type { JsonObject } from "type-fest";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 class GeminiServiceImpl implements AiService{
   constructor() {}
 
   public async replyStructured(
-    paramsStructure: Record<string, any>,
-    actualParams: Object,
+    paramsStructure: JsonObject,
+    actualParams: JsonObject,
     clientMessage: string,
     aditionalRules?: String[]
-  ) {
+  ){
     //Mejora. Inyectar este parser 
     const paramsSchema = parametersToZod(paramsStructure);
     // type TypeParams = z.infer<typeof paramsSchema>
@@ -44,6 +45,10 @@ Reglas:
     });
     if (response.text === undefined) throw new Error("Valio verga gemini");
     const recipe = paramsSchema.parse(JSON.parse(response.text));
-    return recipe;
+    const jsonObjectRecipe: JsonObject = JSON.parse(JSON.stringify(recipe))
+    return jsonObjectRecipe;
+  }
+  public async startConversation(clientMessage:string):Promise<String>{
+    return ""
   }
 }

@@ -1,8 +1,12 @@
+import type { JsonObject } from "type-fest";
+
 export interface AiService {
   replyStructured(
-    paramsStructure: Record<string, any>,
-    actualParams: Object, //Este no me gusta pero ya tengo sueño
+    paramsStructure: JsonObject,
+    actualParams: JsonObject,
     clientMessage: string,
-    aditionalRules?: String[]
-  ): Promise<Record<string, unknown>>;
+    aditionalRules?: string[]
+  ): Promise<JsonObject>;
+
+  startConversation(clientMessage: string): Promise<String>;
 }

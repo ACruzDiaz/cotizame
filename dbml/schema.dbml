@@ -20,6 +20,7 @@ Table Company {
   id String [pk]
   phoneNumber String [unique, not null]
   name String [not null]
+  website String
   tier CompanyTier [not null, default: 'free']
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime
@@ -69,7 +70,9 @@ Table QuoteItem {
   quoteId String [not null]
   productId String [not null]
   parameters Json [not null]
+  status QIStatus [not null, default: 'incomplete']
   calculatedPrice Decimal [not null]
+  createdAt DateTime [default: `now()`, not null]
   quote Quote [not null]
   product Product [not null]
 }
@@ -87,6 +90,11 @@ Table User {
 Enum CompanyTier {
   free
   premium
+}
+
+Enum QIStatus {
+  complete
+  incomplete
 }
 
 Enum UserRole {

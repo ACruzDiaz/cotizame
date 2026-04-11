@@ -1,7 +1,7 @@
 //Definimos esquemas zod
 import { z } from "zod";
-
-export function parametersToZod(parameters: Record<string, any>): z.ZodObject<any> {
+import type { JsonObject } from "type-fest"; 
+export function parametersToZod(parameters: JsonObject): z.ZodObject<any> {
   const shape: Record<string, z.ZodTypeAny> = {};
 
   for (const [key, value] of Object.entries(parameters)) {

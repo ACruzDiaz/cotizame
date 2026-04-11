@@ -16,6 +16,11 @@ enum CompanyTier {
   premium
 }
 
+enum QIStatus {
+  complete
+  incomplete
+}
+
 enum UserRole {
   ADMIN
   USER
@@ -45,6 +50,7 @@ model Company {
   id           String      @id @default(uuid())
   phoneNumber  String      @unique
   name         String
+  website      String?      
   tier         CompanyTier @default(free)
   createdAt    DateTime    @default(now())  @db.Timestamptz
   updatedAt    DateTime?    @db.Timestamptz
@@ -98,11 +104,13 @@ model Quote {
 }
 
 model QuoteItem {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   quoteId         String
   productId       String
   parameters      Json
+  status          QIStatus  @default(incomplete)
   calculatedPrice Decimal
+  createdAt       DateTime  @default(now())   @db.Timestamptz
 
   // Relations
   quote   Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)

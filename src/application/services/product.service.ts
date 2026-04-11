@@ -81,11 +81,11 @@ export class ProductService {
 
   //En caso de que la empresa tenga demasiados productos. Implementar una respuesta con paginacion
   // Agregar una funcion para ocultar productos. En caso de que la empresa no lo quiera prestar temporalmente.
-  public async getAll(cid:string): Promise<Product[]> {
+  public async getAll(companyId:string): Promise<Product[]> {
     try {
       return await prisma.product.findMany({
         where: {
-          companyId:cid,
+          companyId:companyId,
           deletedAt: null,
         },
       });
