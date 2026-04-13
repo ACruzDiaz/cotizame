@@ -8,5 +8,5 @@ export interface AiService {
     aditionalRules?: string[]
   ): Promise<JsonObject>;
 
-  startConversation(clientMessage: string): Promise<String>;
+  startConversation(clientMessage: string): Promise<string>;
 }
