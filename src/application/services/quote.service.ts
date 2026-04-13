@@ -1,5 +1,5 @@
 import { prisma } from "../connection/prismaClient";
-import type { Prisma, Quote } from "../../generated/prisma/client";
+import type { Prisma, Quote, QuoteStatus } from "../../generated/prisma/client";
 
 export class QuoteService {
   constructor() {}
@@ -32,8 +32,16 @@ export class QuoteService {
     }
   }
 
-  public async updateStatus() {
-
+  public async updateStatus(quoteId:string, newStatus: QuoteStatus) {
+    try {
+      return await prisma.quote.update({
+        where: {id: quoteId},
+        data: {status: newStatus}
+      })
+    } catch (error) {
+      throw new Error(`Failed to update quote status. details ${error}`);
+      
+    }
   }
 
   public async addQuoteItems(){
@@ -49,6 +57,20 @@ export class QuoteService {
       throw new Error(`Failed to get quotes by property. details ${error}`);
     }
   }
+
+  public async getLast(clientId:string): Promise<Quote | null> {
+      try {
+        return await prisma.quote.findFirst({
+          where:{clientId},
+          orderBy: {
+            createdAt: "desc", // orden descendente
+          }
+        });
+      } catch (error) {
+        throw new Error(`Failed to get last quote. details: ${error}`);
+      }
+    }
+  
 
   public async getById(id: string): Promise<Quote | null> {
     try {
