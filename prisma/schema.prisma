@@ -11,6 +11,16 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Flag {
+  FirstCreate
+  Cancel
+  Complete
+  Create
+  Quoting
+  Choosing
+  Invalid
+}
+
 enum CompanyTier {
   free
   premium
@@ -38,7 +48,7 @@ model Client {
   clientPhone   String
   name          String?
   registeredAt  DateTime  @default(now()) @db.Timestamptz
-  state
+  state         Flag      @default(FirstCreate)
 
   // Relations
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)

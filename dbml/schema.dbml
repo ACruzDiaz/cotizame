@@ -8,6 +8,7 @@ Table Client {
   clientPhone String [not null]
   name String
   registeredAt DateTime [default: `now()`, not null]
+  state Flag [not null, default: 'FirstCreate']
   company Company [not null]
   quotes Quote [not null]
 
@@ -85,6 +86,16 @@ Table User {
   role UserRole [not null, default: 'ADMIN']
   createdAt DateTime [default: `now()`, not null]
   company Company [not null]
+}
+
+Enum Flag {
+  FirstCreate
+  Cancel
+  Complete
+  Create
+  Quoting
+  Choosing
+  Invalid
 }
 
 Enum CompanyTier {
