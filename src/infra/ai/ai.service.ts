@@ -1,4 +1,5 @@
 import type { JsonObject } from "type-fest";
+import type { Intention } from "../../application/use_cases/state.types";
 
 export interface AiService {
   replyStructured(
@@ -8,5 +9,5 @@ export interface AiService {
     aditionalRules?: string[]
   ): Promise<JsonObject>;
 
-  startConversation(clientMessage: string): Promise<string>;
+  getClientIntention(clientMessage: string): Promise<Intention>;
 }

@@ -38,6 +38,7 @@ model Client {
   clientPhone   String
   name          String?
   registeredAt  DateTime  @default(now()) @db.Timestamptz
+  state
 
   // Relations
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)

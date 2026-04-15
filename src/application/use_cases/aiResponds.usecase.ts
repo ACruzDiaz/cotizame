@@ -1,11 +1,25 @@
-import type { Client, Prisma } from "../../generated/prisma/client";
-import type { JsonObject } from "type-fest";
+import {
+  type QIStatus,
+  type Client,
+  type Prisma,
+  type Quote,
+  type QuoteItem,
+  type QuoteStatus,
+} from "../../generated/prisma/client";
+import type { Flag } from "./state.types";
 import type { AiService } from "../../infra/ai/ai.service";
 import type { ProductService } from "../services/product.service";
 import { QuoteService } from "../services/quote.service";
 import type { QuoteItemService } from "../services/quoteItem.service";
 import type { CompanyService } from "../services/company.service";
+import { stateMachine } from "./stateMachine";
+import { Intention } from "./state.types";
+import { Formating } from "./Formating";
+
 class AiRespondsUseCase {
+  private quote: Quote | null = null;
+  private quoteItem: QuoteItem | null = null;
+
   constructor(
     private aiService: AiService,
     private quoteService: QuoteService,
@@ -13,73 +27,94 @@ class AiRespondsUseCase {
     private productService: ProductService,
     private companyService: CompanyService
   ) {}
-  public async execute(client: Client) {
-    //Necesitamos crear los servicios de la IA {parseo}
-    //1. Recibimos instancia cliente. 👍🏻
-    //2. Determinamos si tiene una Quote en proceso 👍🏻
-    const pendingQuote = await this.quoteService.getByProperty({
-      AND: {
-        clientId: client.id,
-        status: "pending",
-      },
-    });
-    //3. De ser asi continuamos recabando los datos faltantes
-    //3.5 Obtener el ultimo quote item agregado y revisar que tenga todos sus datos
-    if (pendingQuote && pendingQuote.length > 0) {
-      const lastQuoteItem = await this.quoteItemService.getLast(
-        pendingQuote[0]?.id!
-      );
-      //...
-      // const isQuoteItemComplete = lastQuoteItem.status == "complete";
-      if (!lastQuoteItem) throw new Error("It does not exist any quote Item");
-      if (lastQuoteItem && lastQuoteItem.status == "complete") {
-        //Si los tiene todos los datos preguntar si agrega otro producto
-        //...
-      } else {
-        //Si no los tiene pedir datos estructurados
-        const productId = lastQuoteItem?.productId!; //jeje
-        const product = await this.productService.getByProperty({
-          id: productId,
-        });
-        if (product.length == 0) throw new Error("No products with this ID");
-        const productParams = product[0]?.parameters!;
-        const actualParams = lastQuoteItem.parameters;
-        // if (
-        //   typeof productParams == "string" ||
-        //   typeof productParams == "number" ||
-        //   typeof productParams == "boolean" ||
-        //   Array.isArray(productParams)
-        // ){
-        //   throw new Error("Invalid Product params");
-        // }
 
-        await this.aiService.replyStructured(
-          productParams as JsonObject,
-          actualParams as JsonObject,
-          "mensaje del cliente"
-        );
-      }
+  private async getCurrentState(
+    clientId: string,
+    command: Intention
+  ): Promise<Flag> {
+    //Obtener estado de la ultima orden
+    let quoteStatus: QuoteStatus | null = null;
+    let quoteItemStatus: QIStatus | null = null;
+    this.quote = await this.quoteService.getLast(clientId);
+
+    if (this.quote) {
+      this.quoteItem = await this.quoteItemService.getLast(this.quote.id);
+      quoteStatus = this.quote.status ? this.quote.status : null;
     }
-    //4. De lo contrario saludamos y mostramos productos
-    //4.5 No existe quote branch
-    let clientResponse = await this.aiService.startConversation(
-      "mensaje del cliente"
+    if (this.quoteItem && this.quoteItem.status) {
+      quoteItemStatus = this.quoteItem.status ? this.quoteItem.status : null;
+    }
+    const currentState: Flag = await stateMachine(
+      quoteStatus,
+      quoteItemStatus,
+      command
     );
-    const productList = await this.productService.getAll(client.companyId);
-    const parsedProductList = productList
-      .map((t) => `- ${t.name}: ${t.description}.`)
-      .join("\n");
-    const companyData = await this.companyService.getById(client.companyId);
-    if (!companyData) throw new Error("Error getting company by ID");
-    clientResponse.concat(parsedProductList);
-    if (companyData.website) {
-      clientResponse.concat(`\n${companyData.website}`);
-    }
-    return clientResponse
-    //5. La cuote se cierra cuando se envia una cotizacion o cuando el cliente pide cancelar
-    //6. Se envia un mensaje de despedida y una invitacion para iniciar una nueva cotizacion
+    return currentState;
+  }
 
-    //En este proceso no se necesita guardar mensajes. Quiza puede ser una funcion para el futuro,
-    //donde el modelo necesita recordar historial de mensajes.
+  public async execute_2(client: Client, message: string): Promise<string> {
+    const command = await this.aiService.getClientIntention(message);
+    const state: Flag = await this.getCurrentState(client.id, command);
+
+    switch (state) {
+      case "FirstCreate":
+        const productList = await this.productService.getAll(client.companyId);
+        const company = await this.companyService.getById(client.companyId);
+        const res = new Formating({
+          productsList: productList,
+          company: company,
+        })
+          .formatProductList()
+          .formatCompany()
+          .customMessage(
+            `Si la cotización no va como esperabas puedes cancelar y empezar de nuevo.
+            Si necesitas ayuda escribe asistencia y te daremos atención personalizada por via telefonica`
+          )
+          .build();
+
+        return res; // Respuesta tipo string
+      case "Cancel":
+        await this.quoteService.updateStatus(this.quote?.clientId!, "closed"); //hehe
+        return "Cotización cancelada.¿Por qué no intentamos de nuevo?";
+
+      case "Complete":
+        await this.quoteService.updateStatus(this.quote?.clientId!, "complete");
+        //Aqui es donde se regresa el pdf
+        const quotesItems = await this.quoteItemService.getByProperty({
+          quoteId: this.quote?.id!,
+        });
+        return `Esta es tu cotización: ${quotesItems
+          .map((t) => `- ${t.productId} + ${t.calculatedPrice}`)
+          .join("\n")} Total: ${this.quote?.totalAmount}`;
+
+      case "Create":
+        const pList = await this.productService.getAll(client.companyId);
+        const r = new Formating({
+          productsList: pList,
+          company: null,
+        })
+          .formatProductList()
+          .customMessage(
+            `Si la cotización no va como esperabas puedes cancelar y empezar de nuevo.
+            Si necesitas ayuda escribe asistencia y te daremos atención personalizada por via telefonica`
+          )
+          .build();
+
+        return r;
+
+      case "Quoting":
+        //Esta linea es suponiendo el usuario ya escogio el producto
+        const paramsStructure = this.productService.getByProperty({})
+        const clientQuoteItemParams = await this.aiService.replyStructured(
+
+        )
+        //Respuesta. Pedeir los datos que faltan
+      break;
+      case "Invalid":
+        return "Lo siento no puedo ejecutar lo que me pides, intenta con x y o z"  
+      break;
+      default:
+        throw new Error("AiRespondsUseCase Switch error")
+    }
   }
 }

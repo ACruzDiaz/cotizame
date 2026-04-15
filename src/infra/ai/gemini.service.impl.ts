@@ -7,6 +7,7 @@ import {
   GenerateContentResponse,
 } from "@google/genai";
 import type { JsonObject } from "type-fest";
+import { Intention } from "../../application/use_cases/state.types";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 class GeminiServiceImpl implements AiService{
@@ -48,7 +49,8 @@ Reglas:
     const jsonObjectRecipe: JsonObject = JSON.parse(JSON.stringify(recipe))
     return jsonObjectRecipe;
   }
-  public async startConversation(clientMessage:string):Promise<String>{
-    return ""
+  
+  public async getClientIntention(clientMessage:string):Promise<Intention>{
+    return Intention.Assistance
   }
 }
