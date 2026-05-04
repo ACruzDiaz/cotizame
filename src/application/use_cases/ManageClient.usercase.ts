@@ -2,7 +2,7 @@ import { ClientRequestDTO } from "../dtos/client.requestDTO";
 import { ClientService } from "../services/client.service";
 import type { Client } from "../../generated/prisma/client";
 import { CompanyService } from "../services/company.service";
-class ManageClientUseCase {
+export class ManageClientUseCase {
   constructor(
     private clientService: ClientService,
     private companyService: CompanyService

@@ -8,7 +8,7 @@ import type {
   QuoteItem,
   Product,
 } from "../../../generated/prisma/client";
-import type { QIStatus, QuoteStatus } from "../../../generated/prisma/enums";
+import { QIStatus, type QuoteStatus } from "../../../generated/prisma/enums";
 import type { QuoteItemService } from "../../services/quoteItem.service";
 import type { IQuotingUseCases } from "./IQuotingUseCases";
 import type { ProductService } from "../../services/product.service";
@@ -32,8 +32,13 @@ class QuotingUseCases implements IQuotingUseCases {
   generateFinalQuoteMessage(): string {
     throw new Error("Method not implemented.");
   }
-  createEmptyQuote(): Quote {
-    throw new Error("Method not implemented.");
+  async createEmptyQuoteItem(quoteId:string):Promise<QuoteItem> {
+    return await this.quoteItemService.create({
+      quoteId: quoteId,
+      calculatedPrice : 0,
+      parameters : {},
+      status : QIStatus.Initializing
+    })
   }
   async createQuoteItemWithAProduct(
     productId: string,

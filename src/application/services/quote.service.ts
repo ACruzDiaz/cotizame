@@ -1,21 +1,31 @@
 import { prisma } from "../connection/prismaClient";
-import type { Prisma, Quote, QuoteStatus } from "../../generated/prisma/client";
+import {
+  QuoteStatus,
+  type Prisma,
+  type Quote,
+} from "../../generated/prisma/client";
 
 export class QuoteService {
   constructor() {}
 
-  public async create(
-    data: Prisma.QuoteUncheckedCreateInput,
-  ): Promise<{ id: string }> {
+  public async create(data: Prisma.QuoteUncheckedCreateInput): Promise<Quote> {
     try {
       return await prisma.quote.create({
-        data,
-        select: {
-          id: true,
-        },
+        data: { ...data, status: QuoteStatus.Pending },
       });
     } catch (error) {
       throw new Error(`Failed to create a Quote. Details: ${error}`);
+    }
+  }
+  public async update(quote: Quote): Promise<Quote> {
+    try {
+      if (!quote.id) throw new Error("No se asigno una id para update");
+      return await prisma.quote.update({
+        where: { id: quote.id },
+        data: { status: quote.status },
+      });
+    } catch (error) {
+      throw new Error(`Failed to update a QuoteItem. Details: ${error}`);
     }
   }
 
@@ -32,21 +42,18 @@ export class QuoteService {
     }
   }
 
-  public async updateStatus(quoteId:string, newStatus: QuoteStatus) {
+  public async updateStatus(quoteId: string, newStatus: QuoteStatus) {
     try {
       return await prisma.quote.update({
-        where: {id: quoteId},
-        data: {status: newStatus}
-      })
+        where: { id: quoteId },
+        data: { status: newStatus },
+      });
     } catch (error) {
       throw new Error(`Failed to update quote status. details ${error}`);
-      
     }
   }
 
-  public async addQuoteItems(){
-    
-  }
+  public async addQuoteItems() {}
 
   public async getByProperty(where: Prisma.QuoteWhereInput): Promise<Quote[]> {
     try {
@@ -58,19 +65,18 @@ export class QuoteService {
     }
   }
 
-  public async getLast(clientId:string): Promise<Quote | null> {
-      try {
-        return await prisma.quote.findFirst({
-          where:{clientId},
-          orderBy: {
-            createdAt: "desc", // orden descendente
-          }
-        });
-      } catch (error) {
-        throw new Error(`Failed to get last quote. details: ${error}`);
-      }
+  public async getLast(clientId: string): Promise<Quote | null> {
+    try {
+      return await prisma.quote.findFirst({
+        where: { clientId },
+        orderBy: {
+          createdAt: "desc", // orden descendente
+        },
+      });
+    } catch (error) {
+      throw new Error(`Failed to get last quote. details: ${error}`);
     }
-  
+  }
 
   public async getById(id: string): Promise<Quote | null> {
     try {

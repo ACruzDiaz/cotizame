@@ -11,15 +11,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Flag {
-  FirstCreate
-  Cancel
-  Complete
-  Create
-  Quoting
-  Choosing
-  Invalid
-}
 
 enum CompanyTier {
   free
@@ -27,8 +18,10 @@ enum CompanyTier {
 }
 
 enum QIStatus {
-  complete
-  incomplete
+  Initializing
+  Selecting
+  Filling
+  Done
 }
 
 enum UserRole {
@@ -37,9 +30,9 @@ enum UserRole {
 }
 
 enum QuoteStatus {
-  pending
-  complete
-  closed
+  Pending
+  Complete
+  Canceled
 }
 
 model Client {
@@ -48,7 +41,6 @@ model Client {
   clientPhone   String
   name          String?
   registeredAt  DateTime  @default(now()) @db.Timestamptz
-  state         Flag      @default(FirstCreate)
 
   // Relations
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -103,7 +95,7 @@ model Quote {
   id           String       @id @default(uuid())
   companyId    String
   clientId     String
-  status       QuoteStatus  @default(pending)
+  status       QuoteStatus  @default(Pending)
   totalAmount  Decimal
   pdfUrl       String?
   createdAt    DateTime     @default(now())  @db.Timestamptz
@@ -117,15 +109,15 @@ model Quote {
 model QuoteItem {
   id              String    @id @default(uuid())
   quoteId         String
-  productId       String
+  productId       String?
   parameters      Json
-  status          QIStatus  @default(incomplete)
+  status          QIStatus  @default(Initializing)
   calculatedPrice Decimal
   createdAt       DateTime  @default(now())   @db.Timestamptz
 
   // Relations
   quote   Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model User {

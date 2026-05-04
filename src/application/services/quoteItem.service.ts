@@ -8,19 +8,28 @@ export class QuoteItemService {
   private calculatePrice() {}
   public async create(
     data: Prisma.QuoteItemUncheckedCreateInput
-  ): Promise<{ id: string }> {
+  ): Promise<QuoteItem> {
     try {
       return await prisma.quoteItem.create({
-        data,
-        select: {
-          id: true,
-        },
+        data
       });
     } catch (error) {
       throw new Error(`Failed to create a QuoteItem. Details: ${error}`);
     }
   }
 
+  public async update(quoteItem: QuoteItem): Promise<QuoteItem>{
+    try {
+      if(!quoteItem.id) throw new Error("No se asigno una id para update")
+      return await prisma.quoteItem.update({
+        where: {id: quoteItem.id},
+        data: {status: quoteItem.status}
+      })
+    } catch (error) {
+      throw new Error(`Failed to update a QuoteItem. Details: ${error}`);
+      
+    }
+  }
   public async remove(id: string): Promise<{ id: string }> {
     try {
       return await prisma.quoteItem.delete({

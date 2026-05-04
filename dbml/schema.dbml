@@ -8,7 +8,6 @@ Table Client {
   clientPhone String [not null]
   name String
   registeredAt DateTime [default: `now()`, not null]
-  state Flag [not null, default: 'FirstCreate']
   company Company [not null]
   quotes Quote [not null]
 
@@ -57,7 +56,7 @@ Table Quote {
   id String [pk]
   companyId String [not null]
   clientId String [not null]
-  status QuoteStatus [not null, default: 'pending']
+  status QuoteStatus [not null, default: 'Pending']
   totalAmount Decimal [not null]
   pdfUrl String
   createdAt DateTime [default: `now()`, not null]
@@ -69,13 +68,13 @@ Table Quote {
 Table QuoteItem {
   id String [pk]
   quoteId String [not null]
-  productId String [not null]
+  productId String
   parameters Json [not null]
-  status QIStatus [not null, default: 'incomplete']
+  status QIStatus [not null, default: 'Initializing']
   calculatedPrice Decimal [not null]
   createdAt DateTime [default: `now()`, not null]
   quote Quote [not null]
-  product Product [not null]
+  product Product
 }
 
 Table User {
@@ -88,24 +87,16 @@ Table User {
   company Company [not null]
 }
 
-Enum Flag {
-  FirstCreate
-  Cancel
-  Complete
-  Create
-  Quoting
-  Choosing
-  Invalid
-}
-
 Enum CompanyTier {
   free
   premium
 }
 
 Enum QIStatus {
-  complete
-  incomplete
+  Initializing
+  Selecting
+  Filling
+  Done
 }
 
 Enum UserRole {
@@ -114,9 +105,9 @@ Enum UserRole {
 }
 
 Enum QuoteStatus {
-  pending
-  complete
-  closed
+  Pending
+  Complete
+  Canceled
 }
 
 Ref: Client.companyId > Company.id [delete: Cascade]

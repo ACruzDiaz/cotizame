@@ -28,7 +28,6 @@ abstract class State {
   abstract selecting(): void;
   abstract filling(): void;
   abstract done(): void;
-  //Primero hay que hacer un commit y despues hacemos metodo default
 }
 
 class UndefinedState extends State {
@@ -49,7 +48,7 @@ class UndefinedState extends State {
 class DoneState extends State {
   constructor(quote: QuoteContext) {
     super(quote);
-    this.quoteCompleted();
+    this.quoteItemCompleted();
   }
   initializing(): void {
     throw new Error("Method not implemented.");
@@ -63,10 +62,17 @@ class DoneState extends State {
   done(): void {
     throw new Error("Method not implemented.");
   }
-  quoteCompleted(): void {
-    console.log("Primer quoteItem completado");
-
-    this.quote.changeState(new InitializingState(this.quote));
+  async quoteItemCompleted():Promise<void> {
+    //Los calculos se hacen cuando se hace complete de quote
+    //Creamos quote con estado "Initializing"
+    try {
+      console.log("quoteItem completado.");
+      this.quote.setQuoteItemEntity(await this.quote.createEmptyQuoteItem()); 
+      this.quote.changeState(new InitializingState(this.quote));
+      
+    } catch (error) {
+      console.log("Error in quoteItemCompleted",error);
+    }
   }
 }
 class SelectingState extends State {
@@ -311,6 +317,9 @@ export class QuoteContext {
   }
   finishQuote() {}
 
+  async createEmptyQuoteItem():Promise<QuoteItem>{
+    return await this.quotingUseCases.createEmptyQuoteItem(this.quoteEntity.id)
+  }
   async setProduct(): Promise<void> {
     if (!this.productEntity || !this.productEntity.id)
       throw new Error("No product provided");

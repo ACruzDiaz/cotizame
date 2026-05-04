@@ -1,5 +1,5 @@
 import { prisma } from "../connection/prismaClient";
-import type { Prisma, Client } from "../../generated/prisma/client";
+import { type Prisma, type Client } from "../../generated/prisma/client";
 
 export class ClientService {
   constructor() {}

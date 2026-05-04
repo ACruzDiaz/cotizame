@@ -8,7 +8,7 @@ export interface IQuotingUseCases {
   genereteRemainingParamsMessage(): string;
   generateFinalQuoteMessage(): string;
 
-  createEmptyQuote(): Quote;
+  createEmptyQuoteItem(quoteId:string):Promise<QuoteItem>;
   createQuoteItemWithAProduct(productId: string, quoteId: string): Promise<QuoteItem>;
   updateQuoteItemProductParameters(parameters: unknown): QuoteItem;
 
