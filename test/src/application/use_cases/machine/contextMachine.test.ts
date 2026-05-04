@@ -1,6 +1,16 @@
 import { Decimal } from "@prisma/client/runtime/client";
-import { QIStatus, QuoteStatus, type Quote, type QuoteItem } from "../../../../../src/generated/prisma/client";
-import { StateFactory } from "../../../../../src/application/use_cases/machine/contextMachine";
+import {
+  QIStatus,
+  QuoteStatus,
+  type Quote,
+  type QuoteItem,
+} from "../../../../../src/generated/prisma/client";
+import {
+  QuoteContext,
+} from "../../../../../src/application/use_cases/machine/contextMachine";
+import { StateFactory } from "../../../../../src/application/use_cases/machine/StateFactory";
+import { expect, describe, it, test, vi } from "vitest";
+
 //=====Estados======
 /**
  * 1. Create.         El usuario envia el primer mensaje y se le registra y asigna el estado "create".
@@ -14,27 +24,126 @@ import { StateFactory } from "../../../../../src/application/use_cases/machine/c
  *                    Se le responde con el resultado de la cotización
  **/
 
-
-
-//----StateFactory Test
-
-
-
 const dummyQuote: Quote = {
-  id: "string",
-  companyId: "string",
-  clientId: "string",
-  status: QuoteStatus.Canceled,
+  id: "q-1",
+  companyId: "c-1",
+  clientId: "client-1",
+  status: QuoteStatus.Pending,
   totalAmount: Decimal(3.9),
   pdfUrl: null,
   createdAt: new Date(),
 };
-const dummyQuoteItem: QuoteItem = {
-  id: "string",
-  status: QIStatus.Done,
-  createdAt: new Date(),
-  quoteId: "string",
-  productId: "string",
-  parameters: {},
-  calculatedPrice: Decimal(2.2),
-};
+
+describe("StateFactory", () => {
+  it("creates InitializingState when quoteItem.status is Initializing", async () => {
+    const dummyQuoteItem: QuoteItem = {
+      id: "qi-1",
+      status: QIStatus.Initializing,
+      createdAt: new Date(),
+      quoteId: dummyQuote.id,
+      productId: "p-1",
+      parameters: {},
+      calculatedPrice: Decimal(2.2),
+    };
+
+    const mockQuotingUseCases = {
+      getMissingParams: vi.fn(() => []),
+      updateQuoteItem: vi.fn(async (qi: QuoteItem) => qi),
+      updateQuote: vi.fn(async (q: Quote) => q),
+      updateQuoteState: vi.fn((q: Quote, s: any) => ({ ...q, status: s })),
+      updateQuoteItemState: vi.fn((qi: QuoteItem, s: any) => ({
+        ...qi,
+        status: s,
+      })),
+      createEmptyQuoteItem: vi.fn(async (quoteId: string) => ({
+        id: "empty-qi",
+        status: QIStatus.Initializing,
+        createdAt: new Date(),
+        quoteId,
+        productId: "",
+        parameters: {},
+        calculatedPrice: Decimal(0),
+      })),
+      createQuoteItemWithAProduct: vi.fn(
+        async (productId: string, quoteId: string) => ({
+          id: "created-qi",
+          status: QIStatus.Selecting,
+          createdAt: new Date(),
+          quoteId,
+          productId,
+          parameters: {},
+          calculatedPrice: Decimal(0),
+        })
+      ),
+    };
+
+    const ctx = new QuoteContext(
+      dummyQuote as any,
+      dummyQuoteItem as any,
+      mockQuotingUseCases as any
+    );
+    const state = StateFactory.create(ctx);
+    state.activate();
+    expect(state.quote.getState().constructor.name).toBe("InitializingState");
+  });
+
+  it("creates SelectingState when quoteItem.status is Selecting", async () => {
+    const selectingQuoteItem: QuoteItem = {
+      id: "qi-2",
+      status: QIStatus.Selecting,
+      createdAt: new Date(),
+      quoteId: dummyQuote.id,
+      productId: "p-2",
+      parameters: {},
+      calculatedPrice: Decimal(1.1),
+    };
+
+    const mockQuotingUseCases = {
+      getMissingParams: vi.fn(() => ["param1"]),
+      updateQuoteItem: vi.fn(async (qi: QuoteItem) => qi),
+      updateQuote: vi.fn(async (q: Quote) => q),
+      updateQuoteState: vi.fn((q: Quote, s: any) => ({ ...q, status: s })),
+      updateQuoteItemState: vi.fn((qi: QuoteItem, s: any) => ({
+        ...qi,
+        status: s,
+      })),
+      createEmptyQuoteItem: vi.fn(async (quoteId: string) => ({
+        id: "empty-qi-2",
+        status: QIStatus.Initializing,
+        createdAt: new Date(),
+        quoteId,
+        productId: "",
+        parameters: {},
+        calculatedPrice: Decimal(0),
+      })),
+      createQuoteItemWithAProduct: vi.fn(
+        async (productId: string, quoteId: string) => ({
+          id: "created-qi-2",
+          status: QIStatus.Selecting,
+          createdAt: new Date(),
+          quoteId,
+          productId,
+          parameters: {},
+          calculatedPrice: Decimal(0),
+        })
+      ),
+    };
+
+    const ctx = new QuoteContext(
+      dummyQuote,
+      selectingQuoteItem,
+      mockQuotingUseCases as any
+    );
+    //Hoy. StateFactory simplemente crea States
+    //Problema. State es del tipo SelectingState. Bien
+    const state = StateFactory.create(ctx);
+    //Solo si se ejecuta activate(). Cambia el estado
+    state.activate()
+    console.log(
+      //Quote Aun tiene el undefinedState. Mal
+      state.quote.getState()
+    );
+    
+    expect(state.quote.getState().constructor.name).toBe("SelectingState");
+  });
+});
