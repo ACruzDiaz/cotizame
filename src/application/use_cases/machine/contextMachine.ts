@@ -54,10 +54,13 @@ export class QuoteContext {
   setQuoteItemEntity(quoteItem: QuoteItem) {
     this.quoteItemEntity = quoteItem;
   }
-  async changeState(state: State): Promise<void> {
+  changeState(state: State): void {
     this.state = state;
-    await this.updateQuoteEntity();
-    await this.updateQuoteItemEntity();
+    // this.setQuoteItemStatus(state.quote.quoteItemEntity.status)
+    // this.setQuoteStatus(state.quote.quoteEntity.status)
+
+    // await this.updateQuoteEntity();
+    // await this.updateQuoteItemEntity();
   }
 
   setStateDirect(state: State): void {

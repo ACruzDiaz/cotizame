@@ -14,7 +14,7 @@ import type { IQuotingUseCases } from "./IQuotingUseCases";
 import type { ProductService } from "../../services/product.service";
 import type { QuoteService } from "../../services/quote.service";
 
-class QuotingUseCases implements IQuotingUseCases {
+export class QuotingUseCases implements IQuotingUseCases {
   constructor(
     private quoteService: QuoteService,
     private quoteItemService: QuoteItemService,

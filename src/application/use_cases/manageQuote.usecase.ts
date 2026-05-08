@@ -1,6 +1,6 @@
 import type { Quote } from "../../generated/prisma/client";
 import type { QuoteService } from "../services/quote.service";
-
+import { ClientRequestDTO } from "../dtos/client.requestDTO";
 export class ManageQuoteUseCase {
   constructor(private quoteService: QuoteService) {}
   async execute(

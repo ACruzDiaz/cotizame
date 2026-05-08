@@ -54,7 +54,7 @@ describe("client use case", async () => {
       clientService,
       companyService
     ).execute(body);
-
+    
     const clientId = client.id;
     const companyId: string = company.id;
 

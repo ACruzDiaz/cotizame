@@ -10,6 +10,10 @@ import type { IQuotingUseCases } from "./use_cases/machine/IQuotingUseCases";
 import { ManageClientUseCase } from "./use_cases/ManageClient.usercase";
 import { ManageQuoteUseCase } from "./use_cases/manageQuote.usecase";
 import { ManageQuoteItemUseCase } from "./use_cases/manageQuoteItem.usecase";
+import type { Product } from "../generated/prisma/client";
+import type { JsonValue } from "@prisma/client/runtime/client";
+import { Intention } from "./use_cases/state.types";
+import type { ProductService } from "./services/product.service";
 class MessageHandler {
   constructor(
     private aiService: AiService,
@@ -17,10 +21,30 @@ class MessageHandler {
     private clientService: ClientService,
     private companyService: CompanyService,
     private quoteItemService: QuoteItemService,
+    private productService: ProductService,
     private quoteUseCases: IQuotingUseCases
   ) {}
 
+  //Hoy.Agregamos estas 4 variables
+  //Mañana. Hacer test de como MessageHandler.execute() reacciona a body
   async execute(body: unknown) {
+    try {
+      
+    
+    let productEntity: Product | undefined;
+    let parameters: JsonValue | undefined;
+    let responseMessage: string | undefined;
+    let userIntention: Intention | undefined;
+
+    if (typeof body === "object" && body !== null) {
+      const test = body as { parameters?: JsonValue };
+      parameters = test.parameters;
+    }
+    if (typeof body === "object" && body !== null) {
+      const test = body as { userIntention?: Intention };
+      userIntention = test.userIntention;
+    }
+
     //Este metodo lo podemos mandar a un middleware
     const clientData = await new ManageClientUseCase(
       this.clientService,
@@ -37,16 +61,31 @@ class MessageHandler {
       this.quoteItemService
     ).execute(
       quoteData.id,
-      {},//Empty params
+      {}, //Empty params
       QIStatus.Initializing
     );
+
+    if (quoteItemData.productId) {
+      let res = await this.productService.getByProperty({
+        id: quoteItemData.productId,
+      });
+      productEntity = res.length > 0 ? res[0] : undefined;
+    }
+
     const quoteContext = new QuoteContext(
       quoteData,
       quoteItemData,
-      this.quoteUseCases
+      this.quoteUseCases,
+      productEntity,
+      parameters,
+      responseMessage,
+      userIntention
     );
-    
-    const state = new StateFactory(quoteContext);
 
+    const state = StateFactory.create(quoteContext);
+    state.activate();
+    } catch (error) {
+     console.log(error); 
+    }
   }
 }

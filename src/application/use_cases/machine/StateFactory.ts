@@ -3,6 +3,7 @@ import { QuoteContext } from "./contextMachine";
 import { Intention } from "../state.types";
 
 export class StateFactory {
+  private Constructor() {}
   static create(quoteContext: QuoteContext): State {
     switch (quoteContext.getQuoteItemEntity().status) {
       case QIStatus.Initializing:
@@ -102,9 +103,9 @@ export class SelectingState extends State {
     throw new Error("Method not implemented.");
   }
 
-  selecting(): void {
+  async selecting(): Promise<void> {
     try {
-      this.quote.setProduct();
+      await this.quote.setProduct();
       console.log("Producto seleccionado correctamente");
     } catch (error) {
       console.log("Este mensaje va al usuario. Producto seleccionado invalido");
@@ -114,8 +115,12 @@ export class SelectingState extends State {
     if (paramsList && paramsList.length == 0) {
       //Situacion que no deberia pasar
       console.log("Parametros completos");
+      this.quote.setQuoteItemStatus("Done");
+      this.quote.setQuoteStatus("Pending");
       this.quote.changeState(new DoneState(this.quote));
     } else {
+      this.quote.setQuoteItemStatus("Filling");
+      this.quote.setQuoteStatus("Pending");
       console.log("Faltan por completar los siguientes parameter");
       this.quote.changeState(new FillingState(this.quote));
     }
