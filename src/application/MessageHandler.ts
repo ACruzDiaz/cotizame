@@ -14,7 +14,8 @@ import type { Product } from "../generated/prisma/client";
 import type { JsonValue } from "@prisma/client/runtime/client";
 import { Intention } from "./use_cases/state.types";
 import type { ProductService } from "./services/product.service";
-class MessageHandler {
+import { QuotingUseCases } from "./use_cases/machine/QuotingUseCases";
+export class MessageHandler {
   constructor(
     private aiService: AiService,
     private quoteService: QuoteService,
@@ -22,7 +23,6 @@ class MessageHandler {
     private companyService: CompanyService,
     private quoteItemService: QuoteItemService,
     private productService: ProductService,
-    private quoteUseCases: IQuotingUseCases
   ) {}
 
   //Hoy.Agregamos estas 4 variables
@@ -75,7 +75,11 @@ class MessageHandler {
     const quoteContext = new QuoteContext(
       quoteData,
       quoteItemData,
-      this.quoteUseCases,
+      new QuotingUseCases(
+        this.quoteService,
+        this.quoteItemService,
+        this.productService
+      ),
       productEntity,
       parameters,
       responseMessage,

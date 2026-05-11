@@ -10,7 +10,7 @@ import type { JsonObject } from "type-fest";
 import { Intention } from "../../application/use_cases/state.types";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
-class GeminiServiceImpl implements AiService {
+export class GeminiServiceImpl implements AiService {
   constructor() {}
 
   public async getReplyStructured(

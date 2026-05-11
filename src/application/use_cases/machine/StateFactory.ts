@@ -81,14 +81,14 @@ export class DoneState extends State {
     throw new Error("Method not implemented.");
   }
   async quoteItemCompleted(): Promise<void> {
-    //Los calculos se hacen cuando se hace complete de quote
-    //Creamos quote con estado "Initializing"
+    //Los calculos de QUOTE se hacen cuando se complete quote
+    //Creamos quote con estado "Initializing" para repetir el ciclo
     try {
-      console.log("quoteItem completado.");
       this.quote.setQuoteItemEntity(await this.quote.createEmptyQuoteItem());
       this.quote.changeState(new InitializingState(this.quote));
+      console.log("quoteItem completado.");
     } catch (error) {
-      console.log("Error in quoteItemCompleted", error);
+      console.log("Error in DoneStae > quoteItemCompleted()", error);
     }
   }
 }
@@ -168,7 +168,7 @@ export class FillingState extends State {
   async enter(): Promise<void> {
     /* opcional */
   }
-  async initializing(): Promise<void> {
+  initializing():void {
     throw new Error("Method not implemented.");
   }
   async filling(): Promise<void> {
@@ -182,10 +182,10 @@ export class FillingState extends State {
       this.quote.changeState(new FillingState(this.quote));
     }
   }
-  async selecting(): Promise<void> {
+  selecting(): void {
     throw new Error("Method not implemented.");
   }
-  async done(): Promise<void> {
+  done(): void {
     throw new Error("Method not implemented.");
   }
 }
@@ -194,24 +194,18 @@ export class CanceledState extends State {
     super(quote);
   }
   async enter(): Promise<void> {
-    /* nada */
+    throw new Error("Method not implemented.");
   }
   async initializing(): Promise<void> {
-    /* nada */
+    throw new Error("Method not implemented.");
   }
   async filling(): Promise<void> {
-    /* nada */
+    throw new Error("Method not implemented.");
   }
   async selecting(): Promise<void> {
-    /* nada */
+    throw new Error("Method not implemented.");
   }
   async done(): Promise<void> {
-    const quoteUpdated = await this.quote.cancelQuote();
-    const quoteItemUpdated = await this.quote.cancelQuoteItem();
-    const nextState = new InitializingState(this.quote);
-    nextState.quote.setResponseMessage("Mensaje generado");
-    nextState.quote.setQuoteEntity(quoteUpdated);
-    nextState.quote.setQuoteItemEntity(quoteItemUpdated);
-    await this.quote.changeState(nextState);
+    throw new Error("Method not implemented.");
   }
 }

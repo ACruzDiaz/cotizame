@@ -9,7 +9,8 @@ import {
 import type { IQuotingUseCases } from "./IQuotingUseCases";
 import { Intention } from "../state.types";
 import { State, UndefinedState } from "./StateFactory";
-
+import { ShowProductsUseCase } from "../showProducts.usecase";
+import { ProductService } from "../../services/product.service";
 export class QuoteContext {
   private state: State;
 
@@ -88,7 +89,12 @@ export class QuoteContext {
   updateQuoteItemParams() {}
 
   async showProducts() {
-    return "Lista de products";
+    // return "Lista de products";
+    let res = await new ShowProductsUseCase(new ProductService()).execute({
+      companyId: this.quoteEntity.companyId,
+    });
+    console.log(res);
+    return res;
   }
 
   getMissingParams(): string[] {
