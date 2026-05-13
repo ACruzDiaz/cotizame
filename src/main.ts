@@ -9,6 +9,9 @@ import { MessageHandler } from "./application/MessageHandler";
 const app = express();
 const port = 8080;
 
+app.use(express.json())
+
+
 app.get("/api/v1/", (req, res) => {
   res.send("Pagina de inicio \nIntenta con post.");
 });
@@ -26,6 +29,7 @@ app.post("/api/v1", async (req, res) => {
     ).execute(req.body);
   } catch (error) {
     console.log(error);
+    res.json({message: "Falla", error: error})
   }
 });
 

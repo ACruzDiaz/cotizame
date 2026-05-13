@@ -13,7 +13,6 @@ import { ShowProductsUseCase } from "../showProducts.usecase";
 import { ProductService } from "../../services/product.service";
 export class QuoteContext {
   private state: State;
-
   constructor(
     protected quoteEntity: Quote,
     protected quoteItemEntity: QuoteItem,
@@ -23,8 +22,9 @@ export class QuoteContext {
     private responseMessage?: string,
     private userIntention?: Intention
   ) {
-    this.state = new UndefinedState(this); //El estado será cargado desde StateFactory
+    this.state = new UndefinedState(this);
   }
+
   setQuoteItemStatus(status: QIStatus) {
     this.quoteItemEntity.status = status;
   }
@@ -35,7 +35,7 @@ export class QuoteContext {
   getQuoteItemEntity() {
     return this.quoteItemEntity;
   }
-
+  
   getQuoteEntity() {
     return this.quoteEntity;
   }
@@ -55,13 +55,13 @@ export class QuoteContext {
   setQuoteItemEntity(quoteItem: QuoteItem) {
     this.quoteItemEntity = quoteItem;
   }
-  changeState(state: State): void {
+  async changeState(state: State): Promise<void> {
     this.state = state;
     // this.setQuoteItemStatus(state.quote.quoteItemEntity.status)
     // this.setQuoteStatus(state.quote.quoteEntity.status)
 
-    // await this.updateQuoteEntity();
-    // await this.updateQuoteItemEntity();
+    await this.updateQuoteEntity();
+    await this.updateQuoteItemEntity();
   }
 
   setStateDirect(state: State): void {
@@ -86,14 +86,21 @@ export class QuoteContext {
   }
 
   //Service method of context.Se llaman desde las implementaciones state
-  updateQuoteItemParams() {}
+
+  initializeQuoteItemParams() {
+    if (this.productEntity) {
+      const productParams = this.productEntity.parameters;
+      if(!productParams) return
+      this.quoteItemEntity.parameters = Object.fromEntries(
+        Object.entries(productParams).map(([key]) => [key, null])
+      );
+    }
+  }
 
   async showProducts() {
-    // return "Lista de products";
     let res = await new ShowProductsUseCase(new ProductService()).execute({
       companyId: this.quoteEntity.companyId,
     });
-    console.log(res);
     return res;
   }
 
@@ -102,10 +109,10 @@ export class QuoteContext {
   }
 
   async updateQuoteItemEntity(): Promise<QuoteItem> {
-    return this.quotingUseCases.updateQuoteItem(this.quoteItemEntity);
+    return this.quotingUseCases.updateQuoteItem(this.quoteItemEntity.id, this.quoteItemEntity);
   }
   async updateQuoteEntity(): Promise<Quote> {
-    return this.quotingUseCases.updateQuote(this.quoteEntity);
+    return this.quotingUseCases.updateQuote(this.quoteEntity.id, this.quoteEntity);
   }
   cancelQuote() {
     return this.quotingUseCases.updateQuoteState(
@@ -130,6 +137,16 @@ export class QuoteContext {
     await this.quotingUseCases.createQuoteItemWithAProduct(
       this.productEntity.id,
       this.quoteEntity.id
+    );
+  }
+  async updateQuoteItemProduct(): Promise<void> {
+    if (!this.productEntity || !this.productEntity.id)
+      throw new Error("No productId provided");
+    if (!this.quoteItemEntity || !this.quoteItemEntity.id!)
+      throw new Error("No QuoteItemId provided");
+    await this.quotingUseCases.updateQuoteItemProductId(
+      this.quoteItemEntity.id,
+      this.productEntity.id
     );
   }
 }

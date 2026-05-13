@@ -8,6 +8,7 @@ import type {
   QuoteItem,
   Product,
 } from "../../../generated/prisma/client";
+
 import { QIStatus, type QuoteStatus } from "../../../generated/prisma/enums";
 import type { QuoteItemService } from "../../services/quoteItem.service";
 import type { IQuotingUseCases } from "./IQuotingUseCases";
@@ -40,6 +41,7 @@ export class QuotingUseCases implements IQuotingUseCases {
       status : QIStatus.Initializing
     })
   }
+
   async createQuoteItemWithAProduct(
     productId: string,
     quoteId: string
@@ -57,6 +59,15 @@ export class QuotingUseCases implements IQuotingUseCases {
       status: "Initializing",
       calculatedPrice: 0, //Cuidado aqui, quiza null es mejor
     });
+  }
+
+  async updateQuoteItemProductId(quoteId: string, productId: string): Promise<QuoteItem> {
+    const productList = await this.productService.getByProperty({id:productId});
+    if(productList.length === 0)
+      throw new Error("Product not founded");
+    const product = productList[0]!;
+    return await this.quoteItemService.update(quoteId,{productId: productId})
+      
   }
   updateQuoteItemProductParameters(parameters: unknown): QuoteItem {
     throw new Error("Method not implemented.");
@@ -90,10 +101,21 @@ export class QuotingUseCases implements IQuotingUseCases {
     return { ...quote, status };
   }
 
-  async updateQuoteItem(quoteItem: QuoteItem): Promise<QuoteItem> {
-    return await this.quoteItemService.update(quoteItem);
+
+
+  async updateQuoteItem(id:string, quoteItem: QuoteItem): Promise<QuoteItem> {
+    return await this.quoteItemService.update(id, {
+      productId: quoteItem.productId,
+      parameters: quoteItem.parameters as InputJsonValue,
+      status: quoteItem.status,
+      calculatedPrice: quoteItem.calculatedPrice
+    });
   }
-  async updateQuote(quote: Quote): Promise<Quote> {
-    return await this.quoteService.update(quote);
+  async updateQuote(id:string, quote: Quote): Promise<Quote> {
+    return await this.quoteService.update(id, {
+      status: quote.status,
+      totalAmount: quote.totalAmount,
+      pdfUrl: quote.pdfUrl,
+    });
   }
 }

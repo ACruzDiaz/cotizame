@@ -17,7 +17,20 @@ export class QuoteService {
       throw new Error(`Failed to create a Quote. Details: ${error}`);
     }
   }
-  public async update(quote: Quote): Promise<Quote> {
+  public async update(
+    id: string,
+    data: Prisma.QuoteUncheckedUpdateInput
+  ): Promise<Quote> {
+    try {
+      return await prisma.quote.update({
+        where: { id },
+        data,
+      });
+    } catch (error) {
+      throw new Error(`Failed to update Quote. details ${error}`);
+    }
+  }
+  public async updateStatus(quote: Quote): Promise<Quote> {
     try {
       if (!quote.id) throw new Error("No se asigno una id para update");
       return await prisma.quote.update({
@@ -42,16 +55,16 @@ export class QuoteService {
     }
   }
 
-  public async updateStatus(quoteId: string, newStatus: QuoteStatus) {
-    try {
-      return await prisma.quote.update({
-        where: { id: quoteId },
-        data: { status: newStatus },
-      });
-    } catch (error) {
-      throw new Error(`Failed to update quote status. details ${error}`);
-    }
-  }
+  // public async updateStatus(quoteId: string, newStatus: QuoteStatus) {
+  //   try {
+  //     return await prisma.quote.update({
+  //       where: { id: quoteId },
+  //       data: { status: newStatus },
+  //     });
+  //   } catch (error) {
+  //     throw new Error(`Failed to update quote status. details ${error}`);
+  //   }
+  // }
 
   public async addQuoteItems() {}
 

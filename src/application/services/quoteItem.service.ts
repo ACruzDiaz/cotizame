@@ -18,7 +18,21 @@ export class QuoteItemService {
     }
   }
 
-  public async update(quoteItem: QuoteItem): Promise<QuoteItem>{
+    public async update(
+    id: string,
+    data: Prisma.QuoteItemUncheckedUpdateInput
+  ): Promise<QuoteItem> {
+    try {
+      return await prisma.quoteItem.update({
+        where: { id },
+        data
+      });
+    } catch (error) {
+      throw new Error(`Failed to update product. details ${error}`);
+    }
+  }
+
+  public async updateStatus(quoteItem: QuoteItem): Promise<QuoteItem>{
     try {
       if(!quoteItem.id) throw new Error("No se asigno una id para update")
       return await prisma.quoteItem.update({

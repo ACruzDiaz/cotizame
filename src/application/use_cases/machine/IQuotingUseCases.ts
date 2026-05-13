@@ -11,7 +11,8 @@ export interface IQuotingUseCases {
   createEmptyQuoteItem(quoteId:string):Promise<QuoteItem>;
   createQuoteItemWithAProduct(productId: string, quoteId: string): Promise<QuoteItem>;
   updateQuoteItemProductParameters(parameters: unknown): QuoteItem;
-
+  
+  updateQuoteItemProductId(quoteId:string, productId:string):Promise<QuoteItem>
   updateQuoteItemStatus(status: QIStatus): QuoteItem;
   updateQuoteStatus(status: QuoteStatus): Quote;
 
@@ -24,7 +25,9 @@ export interface IQuotingUseCases {
   updateQuoteItemState(quoteItem:QuoteItem, quoteItemStatus: QIStatus): QuoteItem;
   updateQuoteState(quote: Quote,  quoteStatus: QuoteStatus): Quote;
 
+
+
   //Update whole entity
-  updateQuoteItem(quoteItem: QuoteItem):Promise<QuoteItem>;
-  updateQuote(quote:Quote): Promise<Quote>
+  updateQuoteItem(quoteItemId:string, quoteItem: QuoteItem):Promise<QuoteItem>;
+  updateQuote(quoteId:string, quote:Quote): Promise<Quote>
 }

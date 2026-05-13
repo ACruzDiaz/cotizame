@@ -5,18 +5,25 @@ import { Intention } from "../state.types";
 export class StateFactory {
   private Constructor() {}
   static create(quoteContext: QuoteContext): State {
+    let selectedState;
     switch (quoteContext.getQuoteItemEntity().status) {
       case QIStatus.Initializing:
-        return new InitializingState(quoteContext);
+        selectedState = new InitializingState(quoteContext);
+        break;
       case QIStatus.Selecting:
-        return new SelectingState(quoteContext);
+        selectedState = new SelectingState(quoteContext);
+        break;
       case QIStatus.Filling:
-        return new FillingState(quoteContext);
+        selectedState = new FillingState(quoteContext);
+        break;
       case QIStatus.Done:
-        return new DoneState(quoteContext);
+        selectedState = new DoneState(quoteContext);
+        break;
       default:
         throw new Error("undefined State enum");
     }
+    selectedState.activate();
+    return selectedState;
   }
 }
 
@@ -33,9 +40,9 @@ export abstract class State {
     //     console.log("Ninguna accion ejecutada");
     // }
   }
-  activate(): void {
+  async activate(): Promise<void> {
     this.quote.setStateDirect(this);
-    // await this.enter();
+    await this.enter();
   }
   async enter(): Promise<void> {
     /* opcional override */
@@ -88,13 +95,18 @@ export class DoneState extends State {
       this.quote.changeState(new InitializingState(this.quote));
       console.log("quoteItem completado.");
     } catch (error) {
-      console.log("Error in DoneStae > quoteItemCompleted()", error);
+      console.log("Error in DoneState > quoteItemCompleted()", error);
     }
   }
 }
 export class SelectingState extends State {
   constructor(quote: QuoteContext) {
     super(quote);
+  }
+  async enter(): Promise<void> {
+    if (this.quote.getQuoteEntity().status === "Pending") {
+      await this.selecting();
+    }
   }
   initializing(): void {
     throw new Error("Method not implemented.");
@@ -105,14 +117,15 @@ export class SelectingState extends State {
 
   async selecting(): Promise<void> {
     try {
-      await this.quote.setProduct();
+      await this.quote.updateQuoteItemProduct();
       console.log("Producto seleccionado correctamente");
     } catch (error) {
       console.log("Este mensaje va al usuario. Producto seleccionado invalido");
+      throw error;
     }
 
     const paramsList = this.quote.getMissingParams();
-    if (paramsList && paramsList.length == 0) {
+    if (paramsList && paramsList.length == 0 && false) {
       //Situacion que no deberia pasar
       console.log("Parametros completos");
       this.quote.setQuoteItemStatus("Done");
@@ -121,7 +134,10 @@ export class SelectingState extends State {
     } else {
       this.quote.setQuoteItemStatus("Filling");
       this.quote.setQuoteStatus("Pending");
-      console.log("Faltan por completar los siguientes parameter");
+      this.quote.initializeQuoteItemParams();
+      console.log("Faltan por completar los siguientes parameters:\n");
+      //Añadir funcion que determina que parametros hacen falta
+      console.log(this.quote.getMissingParams());
       this.quote.changeState(new FillingState(this.quote));
     }
   }
@@ -166,19 +182,26 @@ export class FillingState extends State {
   }
 
   async enter(): Promise<void> {
-    /* opcional */
+    if (this.quote.getQuoteEntity().status === "Pending") {
+      await this.filling();
+    }
   }
-  initializing():void {
+  initializing(): void {
     throw new Error("Method not implemented.");
   }
   async filling(): Promise<void> {
     const paramsList = this.quote.getMissingParams();
-    if (paramsList && paramsList.length == 0) {
+    if (paramsList && paramsList.length == 0 && false) {
       console.log("Parametros completos");
       this.quote.setQuoteItemStatus("Done");
       this.quote.changeState(new DoneState(this.quote));
     } else {
       this.quote.setQuoteItemStatus("Filling");
+      this.quote.setQuoteStatus("Pending");
+      console.log("Faltan por completar los siguientes parameters:\n");
+      //Añadir funcion que determina que parametros hacen falta
+      console.log(this.quote.getMissingParams());
+      console.log(this.quote.getQuoteItemEntity());
       this.quote.changeState(new FillingState(this.quote));
     }
   }
