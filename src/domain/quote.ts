@@ -1,4 +1,3 @@
-import type { JsonValue } from "type-fest";
 import { QIStatus, QuoteStatus } from "../generated/prisma/enums";
 import { validate as validateUUID, v4 as uuidv4 } from "uuid";
 import {
@@ -133,7 +132,7 @@ export class Quote {
     this._pdfUrl = url;
   }
 
-  setCalculatedTotalAmount(total: number): void {
+  setCalculatedTotalAmount(): void {
     this.ensureMutable();
 
     const incompleteItems = this._items.some(
@@ -154,6 +153,7 @@ export class Quote {
 
   complete(): void {
     this.transitionTo(QuoteStatus.Complete);
+    this.setCalculatedTotalAmount()
   }
 
   cancel(): void {

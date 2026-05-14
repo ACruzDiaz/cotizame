@@ -1,4 +1,3 @@
-import type { JsonValue } from "type-fest";
 import { QIStatus } from "../generated/prisma/enums";
 import { validate as validateUUID, v4 as uuidv4 } from "uuid";
 
@@ -6,7 +5,7 @@ export type QuoteItemProps = {
   id: string;
   quoteId: string;
   productId: string | null;
-  parameters: JsonValue;
+  parameters: Record<string, any>;
   status: QIStatus;
   calculatedPrice: number | null;
   createdAt: Date;
@@ -14,14 +13,14 @@ export type QuoteItemProps = {
 };
 export type QuoteItemCreateProps = {
   productId?: string | null;
-  parameters: JsonValue;
+  parameters: Record<string, any>;
 };
 
 export type QuoteItemPersistenceProps = {
   id: string;
   quoteId: string;
   productId: string | undefined;
-  parameters: JsonValue;
+  parameters: Record<string, any>;
   status: QIStatus;
   calculatedPrice: number | undefined;
   createdAt: Date;
@@ -32,7 +31,7 @@ export class QuoteItem {
   private readonly _id: string;
   private readonly _quoteId: string;
   private _productId: string | null;
-  private _parameters: JsonValue;
+  private _parameters:  Record<string, any>;
   private _status: QIStatus;
   private _calculatedPrice: number | null;
   private readonly _createdAt: Date;
@@ -101,7 +100,8 @@ export class QuoteItem {
     return new QuoteItem(full);
   }
 
-  setCalculatedPrice(price: number): void {
+  //El caller se miraria algo como QI.setCalculatePrice(ItemPriceCalculator.calculateItemPrice(quoteItem, product))
+  setPrice(price: number): void {
     this.ensureMutable();
 
     if (price < 0) {
@@ -115,7 +115,7 @@ export class QuoteItem {
     if (!this._productId) {
       throw new Error("Cannot calculate price without product");
     }
-
+    
     this._calculatedPrice = price;
 
     this.transitionTo(QIStatus.Done);
@@ -140,7 +140,7 @@ export class QuoteItem {
     // }
   }
 
-  addParams(newParams: JsonValue): void {
+  addParams(newParams: Record<string, any>): void {
     this.ensureMutable();
 
     const current = this.asPlainObject(this._parameters);
@@ -149,7 +149,7 @@ export class QuoteItem {
     this._parameters = {
       ...current,
       ...incoming,
-    } as JsonValue;
+    };
 
     // if (this._status === QIStatus.Selecting) {
     this.transitionTo(QIStatus.Filling);
@@ -233,7 +233,7 @@ export class QuoteItem {
     else return false;
   }
 
-  private asPlainObject(value: JsonValue): Record<string, unknown> {
+  private asPlainObject(value: Record<string, any>): Record<string, unknown> {
     if (value !== null && typeof value === "object" && !Array.isArray(value)) {
       return value as Record<string, unknown>;
     }
@@ -258,7 +258,7 @@ export class QuoteItem {
   get productId(): string | null {
     return this._productId;
   }
-  get parameters(): JsonValue {
+  get parameters(): Record<string,any> {
     return structuredClone(this._parameters);
   }
   get status(): QIStatus {

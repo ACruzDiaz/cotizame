@@ -1,7 +1,7 @@
 import type { JsonValue } from "type-fest";
 import type { DynamicPricingDsl } from "./engine/dsl.types";
 import { validate as validateUUID, v4 as uuidv4 } from "uuid";
-type ProductProps = {
+export type ProductProps = {
   id: string;
   companyId: string;
   name: string;
@@ -13,7 +13,7 @@ type ProductProps = {
   deletedAt: Date | null;
 };
 
-type ProductCreateProps = {
+export type ProductCreateProps = {
   companyId: string;
   name: string;
   parameters: JsonValue;
@@ -24,7 +24,7 @@ type ProductCreateProps = {
   deletedAt: Date | undefined;
 };
 
-type ProductPersistenceProps = {
+export type ProductPersistenceProps = {
   id: string;
   companyId: string;
   name: string;
