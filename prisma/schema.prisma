@@ -21,6 +21,7 @@ enum QIStatus {
   Initializing
   Selecting
   Filling
+  Canceled
   Done
 }
 
@@ -56,7 +57,7 @@ model Company {
   website      String?      
   tier         CompanyTier @default(free)
   createdAt    DateTime    @default(now())  @db.Timestamptz
-  updatedAt    DateTime?    @db.Timestamptz
+  updatedAt    DateTime    @db.Timestamptz
 
   // Relations
   clients        Client[]
@@ -95,8 +96,8 @@ model Quote {
   id           String       @id @default(uuid())
   companyId    String
   clientId     String
-  status       QuoteStatus  @default(Pending)
-  totalAmount  Decimal
+  status       QuoteStatus  
+  totalAmount  Decimal?
   pdfUrl       String?
   createdAt    DateTime     @default(now())  @db.Timestamptz
 
@@ -107,12 +108,13 @@ model Quote {
 }
 
 model QuoteItem {
-  id              String    @id @default(uuid())
+  id              String    @id
   quoteId         String
   productId       String?
   parameters      Json
-  status          QIStatus  @default(Initializing)
-  calculatedPrice Decimal
+  status          QIStatus
+  calculatedPrice Decimal?
+  isParamsCompleted  Boolean 
   createdAt       DateTime  @default(now())   @db.Timestamptz
 
   // Relations

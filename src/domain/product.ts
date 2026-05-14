@@ -1,6 +1,6 @@
-import type { JsonValue } from "type-fest";
 import type { DynamicPricingDsl } from "./engine/dsl.types";
 import { validate as validateUUID, v4 as uuidv4 } from "uuid";
+import type { JsonValue, InputJsonValue } from "@prisma/client/runtime/client";
 export type ProductProps = {
   id: string;
   companyId: string;

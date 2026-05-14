@@ -23,7 +23,7 @@ Table Company {
   website String
   tier CompanyTier [not null, default: 'free']
   createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime
+  updatedAt DateTime [not null]
   clients Client [not null]
   products Product [not null]
   quotes Quote [not null]
@@ -56,8 +56,8 @@ Table Quote {
   id String [pk]
   companyId String [not null]
   clientId String [not null]
-  status QuoteStatus [not null, default: 'Pending']
-  totalAmount Decimal [not null]
+  status QuoteStatus [not null]
+  totalAmount Decimal
   pdfUrl String
   createdAt DateTime [default: `now()`, not null]
   company Company [not null]
@@ -70,8 +70,9 @@ Table QuoteItem {
   quoteId String [not null]
   productId String
   parameters Json [not null]
-  status QIStatus [not null, default: 'Initializing']
-  calculatedPrice Decimal [not null]
+  status QIStatus [not null]
+  calculatedPrice Decimal
+  isParamsCompleted Boolean [not null]
   createdAt DateTime [default: `now()`, not null]
   quote Quote [not null]
   product Product
@@ -96,6 +97,7 @@ Enum QIStatus {
   Initializing
   Selecting
   Filling
+  Canceled
   Done
 }
 

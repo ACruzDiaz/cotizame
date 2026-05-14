@@ -81,4 +81,20 @@ export class Company {
   get phoneNumber(): string {
     return this._phoneNumber;
   }
+
+  get name(): string {
+    return this._name;
+  }
+  get website(): string | null {
+    return this._website;
+  }
+  get tier(): CompanyTier {
+    return this._tier;
+  }
+  get createdAt(): Date {
+    return this._createdAt;
+  }
+  get updatedAt(): Date {
+    return this._updatedAt;
+  }
 }
