@@ -27,7 +27,6 @@ export class MessageHandler {
 
   async execute(body: unknown) {
     try {
-      console.log(body);
       let productEntity: Product | undefined;
       let parameters: JsonValue | undefined;
       let responseMessage: string | undefined;
@@ -46,7 +45,6 @@ export class MessageHandler {
         const test = body as { userIntention?: Intention };
         userIntention = test.userIntention;
       }
-
       //Este metodo lo podemos mandar a un middleware
       const clientData = await new ManageClientUseCase(
         this.clientService,

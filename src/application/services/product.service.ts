@@ -1,5 +1,5 @@
 import { prisma } from "../connection/prismaClient";
-import type { DynamicPricingDsl } from "../../engine/dsl.types";
+import type { DynamicPricingDsl } from "../../domain/engine/dsl.types";
 import type { Prisma, Product } from "../../generated/prisma/client";
 import type { ProductWhereInput } from "../../generated/prisma/models";
 

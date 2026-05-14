@@ -1,6 +1,5 @@
 import { QIStatus } from "../../../generated/prisma/enums";
 import { QuoteContext } from "./contextMachine";
-import { Intention } from "../state.types";
 
 export class StateFactory {
   private Constructor() {}
@@ -27,46 +26,34 @@ export class StateFactory {
   }
 }
 
-export abstract class State {
+export class State {
   public quote: QuoteContext;
   constructor(quote: QuoteContext) {
     this.quote = quote;
-    // switch (this.quote.getUserIntention()) {
-    //   case Intention.Cancel:
-    //     break;
-    //   case Intention.Complete:
-    //     break;
-    //   default:
-    //     console.log("Ninguna accion ejecutada");
-    // }
+    // subclasses may inspect intention in their enter() implementations
   }
   async activate(): Promise<void> {
     this.quote.setStateDirect(this);
     await this.enter();
   }
-  async enter(): Promise<void> {
-    /* opcional override */
+  // default enter is a no-op; subclasses may override
+  async enter(): Promise<void> {}
+
+  async initializing(): Promise<void> {
+    throw new Error("Method not implemented.");
   }
-  abstract initializing(): void;
-  abstract selecting(): void;
-  abstract filling(): void;
-  abstract done(): void;
+  async selecting(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  async filling(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  async done(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
 }
 
-export class UndefinedState extends State {
-  initializing(): void {
-    throw new Error("Estado indefinido. Error");
-  }
-  filling(): void {
-    throw new Error("Estado indefinido. Error");
-  }
-  selecting(): void {
-    throw new Error("Estado indefinido. Error");
-  }
-  done(): void {
-    throw new Error("Estado indefinido. Error");
-  }
-}
+export class UndefinedState extends State {}
 
 export class DoneState extends State {
   constructor(quote: QuoteContext) {
@@ -75,24 +62,13 @@ export class DoneState extends State {
   async enter(): Promise<void> {
     await this.quoteItemCompleted();
   }
-  initializing(): void {
-    throw new Error("Method not implemented.");
-  }
-  filling(): void {
-    throw new Error("Method not implemented.");
-  }
-  selecting(): void {
-    throw new Error("Method not implemented.");
-  }
-  done(): void {
-    throw new Error("Method not implemented.");
-  }
   async quoteItemCompleted(): Promise<void> {
     //Los calculos de QUOTE se hacen cuando se complete quote
     //Creamos quote con estado "Initializing" para repetir el ciclo
     try {
-      this.quote.setQuoteItemEntity(await this.quote.createEmptyQuoteItem());
-      this.quote.changeState(new InitializingState(this.quote));
+      // Enqueue creation of an empty QuoteItem and then transition.
+      this.quote.enqueueCreateEmptyQuoteItem();
+      await this.quote.changeState(new InitializingState(this.quote));
       console.log("quoteItem completado.");
     } catch (error) {
       console.log("Error in DoneState > quoteItemCompleted()", error);
@@ -108,17 +84,11 @@ export class SelectingState extends State {
       await this.selecting();
     }
   }
-  initializing(): void {
-    throw new Error("Method not implemented.");
-  }
-  filling(): void {
-    throw new Error("Method not implemented.");
-  }
-
   async selecting(): Promise<void> {
     try {
-      await this.quote.updateQuoteItemProduct();
-      console.log("Producto seleccionado correctamente");
+      // Request update of the quote item product; persistence is executed centrally
+      this.quote.enqueueUpdateQuoteItemProduct();
+      console.log("Producto seleccionado (enqueued)");
     } catch (error) {
       console.log("Este mensaje va al usuario. Producto seleccionado invalido");
       throw error;
@@ -130,7 +100,7 @@ export class SelectingState extends State {
       console.log("Parametros completos");
       this.quote.setQuoteItemStatus("Done");
       this.quote.setQuoteStatus("Pending");
-      this.quote.changeState(new DoneState(this.quote));
+      await this.quote.changeState(new DoneState(this.quote));
     } else {
       this.quote.setQuoteItemStatus("Filling");
       this.quote.setQuoteStatus("Pending");
@@ -138,11 +108,8 @@ export class SelectingState extends State {
       console.log("Faltan por completar los siguientes parameters:\n");
       //Añadir funcion que determina que parametros hacen falta
       console.log(this.quote.getMissingParams());
-      this.quote.changeState(new FillingState(this.quote));
+      await this.quote.changeState(new FillingState(this.quote));
     }
-  }
-  async done(): Promise<void> {
-    throw new Error("Method not implemented.");
   }
 }
 
@@ -160,19 +127,13 @@ export class InitializingState extends State {
     //Enviar un mensaje de bienvenida
     console.log("Este es un mensaje de bienvenida");
     //Despues enviar lista de productos
-    console.log(await this.quote.showProducts());
+    // Request product list; persistence/read will be executed before entering next state
+    this.quote.enqueueShowProducts();
 
     this.quote.setQuoteItemStatus("Selecting");
     this.quote.setQuoteStatus("Pending");
 
     await this.quote.changeState(new SelectingState(this.quote));
-  }
-  selecting(): void {}
-  filling(): void {
-    throw new Error("Method not implemented.");
-  }
-  done(): void {
-    throw new Error("Method not implemented.");
   }
 }
 
@@ -186,15 +147,13 @@ export class FillingState extends State {
       await this.filling();
     }
   }
-  initializing(): void {
-    throw new Error("Method not implemented.");
-  }
   async filling(): Promise<void> {
+    this.quote.setReceivedParams();
     const paramsList = this.quote.getMissingParams();
-    if (paramsList && paramsList.length == 0 && false) {
+    if (paramsList && paramsList.length == 0) {
       console.log("Parametros completos");
       this.quote.setQuoteItemStatus("Done");
-      this.quote.changeState(new DoneState(this.quote));
+      await this.quote.changeState(new DoneState(this.quote));
     } else {
       this.quote.setQuoteItemStatus("Filling");
       this.quote.setQuoteStatus("Pending");
@@ -202,33 +161,12 @@ export class FillingState extends State {
       //Añadir funcion que determina que parametros hacen falta
       console.log(this.quote.getMissingParams());
       console.log(this.quote.getQuoteItemEntity());
-      this.quote.changeState(new FillingState(this.quote));
+      await this.quote.changeState(new FillingState(this.quote));
     }
-  }
-  selecting(): void {
-    throw new Error("Method not implemented.");
-  }
-  done(): void {
-    throw new Error("Method not implemented.");
   }
 }
 export class CanceledState extends State {
   constructor(quote: QuoteContext) {
     super(quote);
-  }
-  async enter(): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  async initializing(): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  async filling(): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  async selecting(): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  async done(): Promise<void> {
-    throw new Error("Method not implemented.");
   }
 }
