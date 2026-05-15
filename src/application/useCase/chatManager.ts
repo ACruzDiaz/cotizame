@@ -7,7 +7,6 @@ import type { ClientRepository } from "../../domain/repository/clientRepository"
 import { Company } from "../../domain/company";
 import { Product } from "../../domain/product";
 import { Quote } from "../../domain/quote";
-import { QuoteItem } from "../../domain/quoteItem";
 import { Client } from "../../domain/client";
 
 import { ChatRequestDTO } from "../dtos/chat.requestDTO";
@@ -39,10 +38,14 @@ export class ChatManager {
     if (!client) throw new Error("No client registered with this phone number");
 
     if (parseBody.productId) {
-      product = await this.productRepository.findByID(parseBody.productId);
+      product = await this.productRepository.findByIDAndFilterByCompanyID(parseBody.productId, company.id);
       product === null ? undefined : product;
     }
     quote = await this.quoteRepository.findLastPendingByClientId(client.id);
+    
+    
+    
+    
     //======== Lógica de aplicación ====================================
     //Logica de creacion de nueva quote
     if (!quote) {
@@ -56,6 +59,7 @@ export class ChatManager {
       await this.quoteItemRepository.save(newItem)
     }
 
+    
     //Logica de cancelado de quote
     if (parseBody.intention === Intention.cancel) {
       if (quote) {
@@ -65,7 +69,7 @@ export class ChatManager {
       }
       return;
     }
-
+    
     //Logica de completado de quote
     if (parseBody.intention === Intention.complete) {
       if (quote) {
@@ -74,9 +78,14 @@ export class ChatManager {
       }
       return;
     }
+    
+    //======== Logica de estados =======================
 
+    const actualQuoteItem = quote.findItem()
+    if(actualQuoteItem === null) throw new Error("Error en el sistema");
+  
     //Logica a ejecutar cuando estamos en estado Initializing
-    if (quote.findItem()?.status === QIStatus.Initializing) {
+    if (actualQuoteItem.status === QIStatus.Initializing) {
       let lastQuote = quote.findItem();
       let save = false;
       if (lastQuote === null) {
@@ -86,8 +95,6 @@ export class ChatManager {
         });
         save = true;
       }
-      console.log("❗❗");
-      console.log(lastQuote);
       console.log("Bienvido al negocio X. Intruciones...");
       console.log("Estos son nuestro productos:");
       const prodList = await this.productRepository.getAllFilterByCompany(
@@ -105,7 +112,7 @@ export class ChatManager {
     }
 
     //Logica a ejecutar cuando estamos en estado Selecting
-    if (quote.findItem()?.status === QIStatus.Selecting) {
+    if (actualQuoteItem.status === QIStatus.Selecting) {
       const lastItem = quote.findItem();
       if (lastItem === null) throw new Error("No existe");
       if (!product) {
@@ -121,34 +128,32 @@ export class ChatManager {
 
     //TODO.Reolver bug. Tarda mas de un intento en marcar true y mark params complete
     //Logica a ejecutar cuando estamos en estado Filling
-    if (quote.findItem()?.status === QIStatus.Filling) {
-      const lastItem = quote.findItem();
-      if (lastItem === null) throw new Error("No existe");
-      const productId = lastItem.productId;
+    if (actualQuoteItem.status === QIStatus.Filling) {
+
+      const productId = actualQuoteItem.productId;
       if (!productId) throw new Error("Errrrorrrr");
 
       product = await this.productRepository.findByID(productId);
       const itemParams = parseBody.itemParameters;
       if (itemParams === undefined) {
-        if (!lastItem.parameters) {
+        if (!actualQuoteItem.parameters) {
           console.log("error al intentar encontrar lastitem.parameters");
           return;
         }
-        const objKeys = Object.keys(lastItem.parameters);
+        const objKeys = Object.keys(actualQuoteItem.parameters);
         console.log("Introduce un parametro valido: " + objKeys);
         return;
       }
       if (!product) throw new Error("El producto no fue asignado");
 
-      lastItem.addParams(itemParams, product);
+      actualQuoteItem.addParams(itemParams, product);
       await this.quoteRepository.update(quote.id, quote);
-      await this.quoteItemRepository.update(lastItem.id, lastItem);
+      await this.quoteItemRepository.update(actualQuoteItem.id, actualQuoteItem);
       return
     }
 
     //Logica a ejecutar cuando estamos en estado Done
-    if (quote.findItem()?.status === QIStatus.Done) {
-      //Crear nueva quoteItem
+    if (actualQuoteItem.status === QIStatus.Done) {
       const newItem = quote.addItem({
         parameters: undefined,
         productId: undefined,

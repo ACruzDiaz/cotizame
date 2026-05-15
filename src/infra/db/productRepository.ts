@@ -28,4 +28,13 @@ export class PrismaProductRepository implements ProductRepository {
     const raws = await prisma.product.findMany({ where: { companyId } });
     return raws.map(ProductMapper.toDomain);
   }
+
+  async findByIDAndFilterByCompanyID(
+    productId: string,
+    companyId: string
+  ): Promise<ProductEntity | null> {
+    const raw = await prisma.product.findUnique({ where: { id:productId, companyId:companyId } });
+    if (!raw) return null;
+    return ProductMapper.toDomain(raw);
+  }
 }
