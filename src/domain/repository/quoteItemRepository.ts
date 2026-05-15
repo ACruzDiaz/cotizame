@@ -5,5 +5,6 @@ export interface QuoteItemRepository {
   update(id: string, entity: QuoteItem): Promise<QuoteItem>;
   findByID(id: string): Promise<QuoteItem | null>;
   getAll(): Promise<QuoteItem[]>;
+  updateMany(entities: QuoteItem[]): Promise<QuoteItem[]>;
   remove(id: string): Promise<void>;
 }

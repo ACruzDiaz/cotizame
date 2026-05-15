@@ -5,8 +5,6 @@ type JsonPers =
   | string
   | number
   | boolean
-  | JsonPers[]
-  | { [key: string]: JsonPers };
 
 const jsonValueSchema: z.ZodType<JsonPers> =
   z.lazy(() =>
@@ -14,8 +12,6 @@ const jsonValueSchema: z.ZodType<JsonPers> =
       z.string(),
       z.number(),
       z.boolean(),
-      z.array(jsonValueSchema),
-      z.record(z.string(), jsonValueSchema),
     ])
   );
 

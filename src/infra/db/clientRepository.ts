@@ -5,7 +5,9 @@ import type { ClientRepository } from "../../domain/repository/clientRepository"
 
 export class PrismaClientRepository implements ClientRepository {
   async save(entity: ClientEntity): Promise<ClientEntity> {
-    const raw = await prisma.client.create({ data: ClientMapper.toPersistence(entity) });
+    const raw = await prisma.client.create({
+      data: ClientMapper.toPersistence(entity),
+    });
     return ClientMapper.toDomain(raw);
   }
 
@@ -21,7 +23,11 @@ export class PrismaClientRepository implements ClientRepository {
     if (!raw) return null;
     return ClientMapper.toDomain(raw);
   }
-
+  async findByPhone(clientPhone: string): Promise<ClientEntity | null> {
+    const raw = await prisma.client.findFirst({ where: { clientPhone } });
+    if (!raw) return null;
+    return ClientMapper.toDomain(raw);
+  }
   async getAll(): Promise<ClientEntity[]> {
     const raws = await prisma.client.findMany();
     return raws.map(ClientMapper.toDomain);

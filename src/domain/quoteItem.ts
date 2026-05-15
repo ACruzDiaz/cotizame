@@ -1,28 +1,31 @@
 import { QIStatus } from "../generated/prisma/enums";
 import { validate as validateUUID, v4 as uuidv4 } from "uuid";
+import type { ProductParams, QuoteItemParams } from "./types/domain.types";
+import { ItemPriceCalculator } from "./service/itemPriceCalculator";
+import type { Product } from "./product";
 
 export type QuoteItemProps = {
   id: string;
   quoteId: string;
   productId: string | null;
-  parameters: Record<string, any>;
+  parameters: QuoteItemParams | null;
   status: QIStatus;
   calculatedPrice: number | null;
   createdAt: Date;
   isParamsCompleted: boolean;
 };
 export type QuoteItemCreateProps = {
-  productId?: string | null;
-  parameters: Record<string, any>;
+  productId: string | undefined;
+  parameters: QuoteItemParams | undefined;
 };
 
 export type QuoteItemPersistenceProps = {
   id: string;
   quoteId: string;
-  productId: string | undefined;
-  parameters: Record<string, any>;
+  productId: string | null;
+  parameters: QuoteItemParams | null;
   status: QIStatus;
-  calculatedPrice: number | undefined;
+  calculatedPrice: number | null;
   createdAt: Date;
   isParamsCompleted: boolean;
 };
@@ -31,7 +34,7 @@ export class QuoteItem {
   private readonly _id: string;
   private readonly _quoteId: string;
   private _productId: string | null;
-  private _parameters:  Record<string, any>;
+  private _parameters: QuoteItemParams | null;
   private _status: QIStatus;
   private _calculatedPrice: number | null;
   private readonly _createdAt: Date;
@@ -66,7 +69,7 @@ export class QuoteItem {
       id: uuidv4(),
       quoteId: quoteId,
       productId: props.productId === undefined ? null : props.productId,
-      parameters: props.parameters,
+      parameters: props.parameters === undefined ? null : props.parameters,
       status: QIStatus.Initializing,
       calculatedPrice: null,
       createdAt: new Date(),
@@ -82,7 +85,7 @@ export class QuoteItem {
     if (props.productId) {
       this.ensureValidUUID(props.productId, "ProductID");
     }
-    if (props.calculatedPrice !== undefined && props.calculatedPrice < 0)
+    if (props.calculatedPrice !== null && props.calculatedPrice < 0)
       throw new Error("CalculatedPrice cannot be less than 0");
 
     const full: QuoteItemProps = {
@@ -115,7 +118,7 @@ export class QuoteItem {
     if (!this._productId) {
       throw new Error("Cannot calculate price without product");
     }
-    
+
     this._calculatedPrice = price;
 
     this.transitionTo(QIStatus.Done);
@@ -129,18 +132,25 @@ export class QuoteItem {
     this._isParamsCompleted = true;
   }
 
-  assignProduct(productId: string): void {
+  assignProduct(productId: string, productParams: ProductParams): void {
     this.ensureMutable();
     QuoteItem.ensureValidUUID(productId, "ProductID");
 
     this._productId = productId;
+    this._parameters = this.initNullParams(productParams);
 
-    // if (this._status === QIStatus.Initializing) {
-    this.transitionTo(QIStatus.Selecting);
-    // }
+    this.transitionTo(QIStatus.Filling);
   }
 
-  addParams(newParams: Record<string, any>): void {
+  private initNullParams(productParams: ProductParams): Record<string, null> {
+    return Object.fromEntries(
+      Object.keys(productParams).map((key) => [key, null])
+    );
+  }
+
+  addParams(newParams: QuoteItemParams, product: Product): void {
+    if (this._parameters === null)
+      throw new Error("Can not add params keys does not exist nor product");
     this.ensureMutable();
 
     const current = this.asPlainObject(this._parameters);
@@ -150,19 +160,22 @@ export class QuoteItem {
       ...current,
       ...incoming,
     };
-
-    // if (this._status === QIStatus.Selecting) {
-    this.transitionTo(QIStatus.Filling);
-    // }
+    const areParamsCompleted = this.areParamsCompleted(this._parameters, product.parameters)
+    console.log(new Date());
+    console.log("Are params Completed? " + areParamsCompleted);
+    if (areParamsCompleted) {
+      this.markParamsCompleted();
+      this.setPrice(ItemPriceCalculator.calculateItemPrice(this, product));
+    }
   }
 
   //====Domain Actions====================
 
-  private startSelecting(): void {
+  startSelecting(): void {
     this.transitionTo(QIStatus.Selecting);
   }
 
-  private startFilling(): void {
+  startFilling(): void {
     this.transitionTo(QIStatus.Filling);
   }
 
@@ -227,15 +240,15 @@ export class QuoteItem {
       throw new Error("Current state does not allow modifications");
     }
   }
-  private isTerminalState(): boolean {
+  isTerminalState(): boolean {
     if (this._status === QIStatus.Canceled || this._status === QIStatus.Done)
       return true;
     else return false;
   }
 
-  private asPlainObject(value: Record<string, any>): Record<string, unknown> {
+  private asPlainObject(value: QuoteItemParams): QuoteItemParams {
     if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-      return value as Record<string, unknown>;
+      return value;
     }
 
     return {};
@@ -245,6 +258,35 @@ export class QuoteItem {
     if (!validateUUID(value)) {
       throw new Error(`Invalid UUID ${field}`);
     }
+  }
+
+  private areParamsCompleted(
+    current: QuoteItemParams,
+    base: ProductParams
+  ): boolean {
+
+    const currentKeys = Object.keys(current);
+    const baseKeys = Object.keys(base);
+
+    // mismos keys
+    if (
+      currentKeys.length !== baseKeys.length ||
+      !baseKeys.every((key) => key in current)
+    ) {
+      return false;
+    }
+
+    return baseKeys.every((key) => {
+      const value = current[key];
+      const expectedType = base[key];
+
+      // null y undefined no son válidos
+      if (value === null || value === undefined) {
+        return false;
+      }
+
+      return typeof value === expectedType;
+    });
   }
 
   //====Getters =======================================
@@ -258,7 +300,7 @@ export class QuoteItem {
   get productId(): string | null {
     return this._productId;
   }
-  get parameters(): Record<string,any> {
+  get parameters(): QuoteItemParams | null {
     return structuredClone(this._parameters);
   }
   get status(): QIStatus {

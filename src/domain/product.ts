@@ -1,11 +1,11 @@
 import type { DynamicPricingDsl } from "./engine/dsl.types";
 import { validate as validateUUID, v4 as uuidv4 } from "uuid";
-import type { JsonValue, InputJsonValue } from "@prisma/client/runtime/client";
+import type { ProductParams } from "./types/domain.types";
 export type ProductProps = {
   id: string;
   companyId: string;
   name: string;
-  parameters: JsonValue;
+  parameters: ProductParams;
   description: string;
   notes: string | null;
   basePrice: number;
@@ -16,7 +16,7 @@ export type ProductProps = {
 export type ProductCreateProps = {
   companyId: string;
   name: string;
-  parameters: JsonValue;
+  parameters: ProductParams;
   description: string;
   notes: string | undefined;
   basePrice: number;
@@ -28,7 +28,7 @@ export type ProductPersistenceProps = {
   id: string;
   companyId: string;
   name: string;
-  parameters: JsonValue;
+  parameters: ProductParams;
   description: string;
   notes: string | null;
   basePrice: number;
@@ -40,7 +40,7 @@ export class Product {
   private readonly _id: string;
   private readonly _companyId: string;
   private _name: string;
-  private _parameters: JsonValue;
+  private _parameters: ProductParams;
   private _description: string;
   private _notes: string | null;
   private _basePrice: number;
@@ -124,7 +124,7 @@ export class Product {
     return this._name;
   }
 
-  get parameters(): JsonValue {
+  get parameters(): ProductParams {
     return this._parameters;
   }
 

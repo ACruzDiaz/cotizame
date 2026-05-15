@@ -30,4 +30,17 @@ export class PrismaQuoteItemRepository implements QuoteItemRepository {
   async remove(id: string): Promise<void> {
     await prisma.quoteItem.delete({ where: { id } });
   }
+
+  async updateMany(entities: QuoteItemEntity[]): Promise<QuoteItemEntity[]> {
+    // Use a transaction to run all updates atomically.
+    const updateActions = entities.map((entity) => {
+      const data = QuoteItemMapper.toPersistence(entity) as any;
+      const id = data.id;
+      delete data.id;
+      return prisma.quoteItem.update({ where: { id }, data });
+    });
+
+    const raws = await prisma.$transaction(updateActions);
+    return raws.map(QuoteItemMapper.toDomain);
+  }
 }

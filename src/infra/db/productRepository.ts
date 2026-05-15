@@ -5,7 +5,9 @@ import type { ProductRepository } from "../../domain/repository/productRepositor
 
 export class PrismaProductRepository implements ProductRepository {
   async save(entity: ProductEntity): Promise<ProductEntity> {
-    const raw = await prisma.product.create({ data: ProductMapper.toPersistence(entity) });
+    const raw = await prisma.product.create({
+      data: ProductMapper.toPersistence(entity),
+    });
     return ProductMapper.toDomain(raw);
   }
 
@@ -22,9 +24,8 @@ export class PrismaProductRepository implements ProductRepository {
     return ProductMapper.toDomain(raw);
   }
 
-  async getAll(): Promise<ProductEntity[]> {
-    const raws = await prisma.product.findMany();
+  async getAllFilterByCompany(companyId: string): Promise<ProductEntity[]> {
+    const raws = await prisma.product.findMany({ where: { companyId } });
     return raws.map(ProductMapper.toDomain);
   }
-
 }

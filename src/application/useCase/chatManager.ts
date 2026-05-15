@@ -1,38 +1,162 @@
-import type{ CompanyRepository } from "../../domain/repository/companyRepository";
+import type { CompanyRepository } from "../../domain/repository/companyRepository";
 import type { ProductRepository } from "../../domain/repository/productRepository";
 import type { QuoteItemRepository } from "../../domain/repository/quoteItemRepository";
 import type { QuoteRepository } from "../../domain/repository/quoteRepository";
-import type { UserRepository } from "../../domain/repository/userRepository";
+import type { ClientRepository } from "../../domain/repository/clientRepository";
 
 import { Company } from "../../domain/company";
 import { Product } from "../../domain/product";
 import { Quote } from "../../domain/quote";
 import { QuoteItem } from "../../domain/quoteItem";
-import { User } from "../../domain/user";
+import { Client } from "../../domain/client";
 
 import { ChatRequestDTO } from "../dtos/chat.requestDTO";
 import { Intention } from "../types/app.types";
+import { QIStatus } from "../../generated/prisma/enums";
 export class ChatManager {
   constructor(
-    private productRepository : ProductRepository,
-    private quoteItemRepository : QuoteItemRepository,
-    private quoteRepository : QuoteRepository,
-    private userRepository : UserRepository,
-    private companyRepository : CompanyRepository
-  ){}
-  public async start(body : unknown){
+    private productRepository: ProductRepository,
+    private quoteItemRepository: QuoteItemRepository,
+    private quoteRepository: QuoteRepository,
+    private clientRepository: ClientRepository,
+    private companyRepository: CompanyRepository
+  ) {}
+  public async start(body: unknown) {
+    const parseBody = ChatRequestDTO.body(body);
+    let product: Product | null = null;
+    let quote: Quote | null = null;
 
-    const parseBody = ChatRequestDTO.body(body)
+    //===== Carga de datos ===================================================
+    const company: Company | null = await this.companyRepository.findByPhone(
+      parseBody.companyPhone
+    );
+    if (!company)
+      throw new Error("No company registered with this phone number");
 
-    if(parseBody.intention === Intention.cancel){
-      //Logica de cancelado de quote
+    const client: Client | null = await this.clientRepository.findByPhone(
+      parseBody.clientPhone
+    );
+    if (!client) throw new Error("No client registered with this phone number");
+
+    if (parseBody.productId) {
+      product = await this.productRepository.findByID(parseBody.productId);
+      product === null ? undefined : product;
+    }
+    quote = await this.quoteRepository.findLastPendingByClientId(client.id);
+    //======== Lógica de aplicación ====================================
+    //Logica de creacion de nueva quote
+    if (!quote) {
+      quote = Quote.create({ clientId: client.id, companyId: company.id });
+      let newItem = quote.addItem({parameters:undefined, productId:undefined})
+      await this.quoteRepository.save(quote);
+      await this.quoteItemRepository.save(newItem)
+    }
+    if(quote.items.length === 0){
+      let newItem = quote.addItem({parameters:undefined, productId:undefined})
+      await this.quoteItemRepository.save(newItem)
     }
 
-    if(parseBody.intention === Intention.complete){
-      //Logica de completado de quote
+    //Logica de cancelado de quote
+    if (parseBody.intention === Intention.cancel) {
+      if (quote) {
+        quote.cancel();
+        await this.quoteRepository.update(quote.id, quote);
+        await this.quoteItemRepository.updateMany(quote.items);
+      }
+      return;
     }
 
-    // const quote = await this.quoteRepository.findLastPendingByClientId(client.id)
+    //Logica de completado de quote
+    if (parseBody.intention === Intention.complete) {
+      if (quote) {
+        quote.complete();
+        this.quoteRepository.update(quote.id, quote);
+      }
+      return;
+    }
+
+    //Logica a ejecutar cuando estamos en estado Initializing
+    if (quote.findItem()?.status === QIStatus.Initializing) {
+      let lastQuote = quote.findItem();
+      let save = false;
+      if (lastQuote === null) {
+        lastQuote = quote.addItem({
+          parameters: undefined,
+          productId: undefined,
+        });
+        save = true;
+      }
+      console.log("❗❗");
+      console.log(lastQuote);
+      console.log("Bienvido al negocio X. Intruciones...");
+      console.log("Estos son nuestro productos:");
+      const prodList = await this.productRepository.getAllFilterByCompany(
+        company.id
+      );
+      console.log(prodList);
+      lastQuote.startSelecting();
+      await this.quoteRepository.update(quote.id, quote);
+      if (save) {
+        await this.quoteItemRepository.save(lastQuote);
+      } else {
+        await this.quoteItemRepository.update(lastQuote.id, lastQuote);
+      }
+      return
+    }
+
+    //Logica a ejecutar cuando estamos en estado Selecting
+    if (quote.findItem()?.status === QIStatus.Selecting) {
+      const lastItem = quote.findItem();
+      if (lastItem === null) throw new Error("No existe");
+      if (!product) {
+        console.log("Selecciona un producto apá");
+        return;
+      }
+      lastItem.assignProduct(product.id, product.parameters);
+      await this.quoteItemRepository.update(lastItem.id, lastItem);
+
+      console.log("Haz seleccionado el producto" + product.name);
+      return
+    }
+
+    //TODO.Reolver bug. Tarda mas de un intento en marcar true y mark params complete
+    //Logica a ejecutar cuando estamos en estado Filling
+    if (quote.findItem()?.status === QIStatus.Filling) {
+      const lastItem = quote.findItem();
+      if (lastItem === null) throw new Error("No existe");
+      const productId = lastItem.productId;
+      if (!productId) throw new Error("Errrrorrrr");
+
+      product = await this.productRepository.findByID(productId);
+      const itemParams = parseBody.itemParameters;
+      if (itemParams === undefined) {
+        if (!lastItem.parameters) {
+          console.log("error al intentar encontrar lastitem.parameters");
+          return;
+        }
+        const objKeys = Object.keys(lastItem.parameters);
+        console.log("Introduce un parametro valido: " + objKeys);
+        return;
+      }
+      if (!product) throw new Error("El producto no fue asignado");
+
+      lastItem.addParams(itemParams, product);
+      await this.quoteRepository.update(quote.id, quote);
+      await this.quoteItemRepository.update(lastItem.id, lastItem);
+      return
+    }
+
+    //Logica a ejecutar cuando estamos en estado Done
+    if (quote.findItem()?.status === QIStatus.Done) {
+      //Crear nueva quoteItem
+      const newItem = quote.addItem({
+        parameters: undefined,
+        productId: undefined,
+      });
+      await this.quoteItemRepository.save(newItem);
+      return
+    }
+
     /**
      * body{
      *  "clientPhone": "1111111",

@@ -5,7 +5,9 @@ import type { CompanyRepository } from "../../domain/repository/companyRepositor
 
 export class PrismaCompanyRepository implements CompanyRepository {
   async save(entity: CompanyEntity): Promise<CompanyEntity> {
-    const raw = await prisma.company.create({ data: CompanyMapper.toPersistence(entity) });
+    const raw = await prisma.company.create({
+      data: CompanyMapper.toPersistence(entity),
+    });
     return CompanyMapper.toDomain(raw);
   }
 
@@ -18,6 +20,13 @@ export class PrismaCompanyRepository implements CompanyRepository {
 
   async findByID(id: string): Promise<CompanyEntity | null> {
     const raw = await prisma.company.findUnique({ where: { id } });
+    if (!raw) return null;
+    return CompanyMapper.toDomain(raw);
+  }
+  async findByPhone(phone: string): Promise<CompanyEntity | null> {
+    const raw = await prisma.company.findUnique({
+      where: { phoneNumber: phone },
+    });
     if (!raw) return null;
     return CompanyMapper.toDomain(raw);
   }

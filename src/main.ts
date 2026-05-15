@@ -3,7 +3,7 @@ import { ChatManager } from "./application/useCase/chatManager";
 import { PrismaProductRepository } from "./infra/db/productRepository";
 import { PrismaQuoteItemRepository } from "./infra/db/quoteItemRepository";
 import { PrismaQuoteRepository } from "./infra/db/quoteRepository";
-import { PrismaUserRepository } from "./infra/db/userRepository";
+import { PrismaClientRepository } from "./infra/db/clientRepository";
 import { PrismaCompanyRepository } from "./infra/db/companyRepository";
 const app = express();
 
@@ -21,7 +21,7 @@ app.post("/api/v1", async (req, res) => {
       new PrismaProductRepository(),
       new PrismaQuoteItemRepository(),
       new PrismaQuoteRepository(),
-      new PrismaUserRepository(),
+      new PrismaClientRepository(),
       new PrismaCompanyRepository()
     ).start(req.body);
   } catch (error) {

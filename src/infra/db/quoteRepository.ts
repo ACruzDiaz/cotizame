@@ -14,7 +14,7 @@ export class PrismaQuoteRepository implements QuoteRepository {
   }
 
   async update(id: string, entity: QuoteEntity): Promise<QuoteEntity> {
-    const data = QuoteMapper.toPersistence(entity) as any;
+    const data = QuoteMapper.toPersistence(entity);
     delete data.id;
     const raw = await prisma.quote.update({ where: { id }, data });
     return QuoteMapper.toDomain(raw);
@@ -43,10 +43,13 @@ export class PrismaQuoteRepository implements QuoteRepository {
       items: raw.items.map((it) => ({
         id: it.id,
         quoteId: it.quoteId,
-        productId: it.productId === null ? undefined : it.productId,
+        productId: it.productId,
         parameters: it.parameters as any,
         status: it.status,
-        calculatedPrice: it.calculatedPrice?.toNumber(),
+        calculatedPrice:
+          it.calculatedPrice == undefined
+            ? null
+            : it.calculatedPrice.toNumber(),
         createdAt: it.createdAt,
         isParamsCompleted: it.isParamsCompleted,
       })),
@@ -79,10 +82,13 @@ export class PrismaQuoteRepository implements QuoteRepository {
       items: raw.items.map((it) => ({
         id: it.id,
         quoteId: it.quoteId,
-        productId: it.productId === null ? undefined : it.productId,
+        productId: it.productId,
         parameters: it.parameters as any,
         status: it.status,
-        calculatedPrice: it.calculatedPrice?.toNumber(),
+        calculatedPrice:
+          it.calculatedPrice == undefined
+            ? null
+            : it.calculatedPrice.toNumber(),
         createdAt: it.createdAt,
         isParamsCompleted: it.isParamsCompleted,
       })),
@@ -103,10 +109,13 @@ export class PrismaQuoteRepository implements QuoteRepository {
         items: raw.items.map((it) => ({
           id: it.id,
           quoteId: it.quoteId,
-          productId: it.productId === null ? undefined : it.productId,
+          productId: it.productId,
           parameters: it.parameters as any,
           status: it.status,
-          calculatedPrice: it.calculatedPrice?.toNumber(),
+          calculatedPrice:
+            it.calculatedPrice == undefined
+              ? null
+              : it.calculatedPrice.toNumber(),
           createdAt: it.createdAt,
           isParamsCompleted: it.isParamsCompleted,
         })),

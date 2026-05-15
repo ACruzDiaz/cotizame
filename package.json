@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/src/main.js",
     "dev": "tsx src/main.ts",
+    "dummy": "tsx src/dummy.ts",
     "test": "vitest",
     "seed": "tsx prisma/seed.ts"
   },

@@ -4,7 +4,6 @@ import {
   QuoteItem,
   type QuoteItemCreateProps,
   type QuoteItemPersistenceProps,
-  type QuoteItemProps,
 } from "./quoteItem";
 type Props = {
   id: string;
@@ -70,6 +69,9 @@ export class Quote {
       items: [],
       createdAt: new Date(),
     };
+    // full.items.push(
+    //   QuoteItem.create(full.id, { parameters: undefined, productId: undefined })
+    // );
     return new Quote(full);
   }
 
@@ -99,7 +101,12 @@ export class Quote {
 
   addItem(props: QuoteItemCreateProps): QuoteItem {
     this.ensureMutable();
-
+    const currentQuoteItem = this.findMutableItem();
+    if (currentQuoteItem) {
+      throw new Error(
+        "You have incomplete quoteItems that need to be completed first"
+      );
+    }
     const item = QuoteItem.create(this._id, props);
 
     this._items.push(item);
@@ -116,17 +123,19 @@ export class Quote {
     );
   }
 
-  findItem(itemId: string): QuoteItem {
-    const item = this._items.find((x) => x.id === itemId);
-
-    if (!item) {
-      throw new Error("QuoteItem not found");
-    }
-
-    return item;
+  findItem(): QuoteItem | null {
+    return this._items.reduce((prev, curr) =>
+      curr.createdAt.getTime() > prev.createdAt.getTime() ? curr : prev
+    );
+  }
+  private findMutableItem(): QuoteItem | null {
+    const item = this._items.find(
+      (x) => x.status !== QIStatus.Canceled && x.status !== QIStatus.Done
+    );
+    return item ?? null;
   }
 
-  //Mientras solamente sera un texto que se reponde al finalizar el quote
+  //Mientras solamente sera un texto que se responde al finalizar el quote
   setPdfUrl(url: string): void {
     this.ensureMutable();
     this._pdfUrl = url;
@@ -153,7 +162,7 @@ export class Quote {
 
   complete(): void {
     this.transitionTo(QuoteStatus.Complete);
-    this.setCalculatedTotalAmount()
+    this.setCalculatedTotalAmount();
   }
 
   cancel(): void {
@@ -223,6 +232,9 @@ export class Quote {
     }
   }
 
+  getLastItem(): QuoteItem | null {
+    return this._items.length > 0 ? this._items[this._items.length - 1]! : null;
+  }
   //====Getters =======================================
 
   get id(): string {
