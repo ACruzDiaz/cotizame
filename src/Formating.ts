@@ -1,4 +1,4 @@
-import type { Client, Company, Product } from "../../generated/prisma/client";
+import type { Client, Company, Product } from "./generated/prisma/client";
 
 interface FormatEntity {
   productsList: Product[];

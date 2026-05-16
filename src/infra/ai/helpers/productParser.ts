@@ -1,32 +1,16 @@
-//Definimos esquemas zod
-import { z } from "zod";
-import type { JsonObject } from "type-fest"; 
-export function parametersToZod(parameters: JsonObject): z.ZodObject<any> {
-  const shape: Record<string, z.ZodTypeAny> = {};
+import z from "zod";
+import { Intention } from "../../../application/types/app.types";
+import type { AllowedQuoteItemParams } from "../../../domain/types/domain.types";
 
-  for (const [key, value] of Object.entries(parameters)) {
-    if (Array.isArray(value)) {
-      // Si es un array de strings → enum
-      shape[key] = z.enum(value as [string, ...string[]]).nullable();
-    } else if (value === "number") {
-      shape[key] = z.number().nullable();
-    } else if (value === "string") {
-      shape[key] = z.string().nullable();
-    } else if (value === "boolean") {
-      shape[key] = z.boolean().nullable();
-    }
-  }
 
-  return z.object(shape);
-}
+const jsonValueSchema: z.ZodType<AllowedQuoteItemParams> = z.lazy(() =>
+  z.union([z.string(), z.number(), z.boolean(), z.null()])
+);
 
-// const jsondata = 
-// {
-//   name:"string",
-//   age:"number",
-//   frutas:["manza", "fresa", "1"]
-// }
+export const qIParamsSchema = z.object({
+  itemParameters: z.record(z.string(), jsonValueSchema).optional(),
+});
 
-// console.log(
-//   parametersToZod(jsondata).toJSONSchema().properties
-// );
+export const intentionSchema = z.object({
+  intention: z.enum(Intention).optional(),
+});

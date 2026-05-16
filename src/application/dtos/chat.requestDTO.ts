@@ -1,18 +1,17 @@
 import z, { string } from "zod";
 import { Intention } from "../types/app.types";
-
-type JsonPers = string | number | boolean;
+import type { QuoteItemParams, AllowedQuoteItemParams} from "../../domain/types/domain.types";
 
 export type BodyReq = {
   clientPhone: string;
   companyPhone: string;
   productId?: string | undefined;
-  itemParameters?: Record<string, JsonPers> | undefined;
+  itemParameters?: QuoteItemParams | undefined;
   intention?: Intention | undefined;
 };
 
-const jsonValueSchema: z.ZodType<JsonPers> = z.lazy(() =>
-  z.union([z.string(), z.number(), z.boolean()])
+const jsonValueSchema: z.ZodType<AllowedQuoteItemParams> = z.lazy(() =>
+  z.union([z.string(), z.number(), z.boolean(), z.null()])
 );
 
 const bodySchema = z.object({

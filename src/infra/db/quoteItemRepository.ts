@@ -43,4 +43,20 @@ export class PrismaQuoteItemRepository implements QuoteItemRepository {
     const raws = await prisma.$transaction(updateActions);
     return raws.map(QuoteItemMapper.toDomain);
   }
+
+  async findUniqueByClientPhoneGroupByStatusFilling(clientPhone: string): Promise<QuoteItemEntity | null>{
+    const raw = await prisma.quoteItem.findFirst({
+      where: {
+        status: "Filling",
+        quote: {
+          client: {
+            clientPhone,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!raw) return null;
+    return QuoteItemMapper.toDomain(raw);
+  }
 }

@@ -7,6 +7,7 @@ import { PrismaClientRepository } from "./infra/db/clientRepository";
 import { PrismaCompanyRepository } from "./infra/db/companyRepository";
 import { bodyParsing } from "./application/middlewares/bodyParsing.middleware";
 import { aiParsing } from "./application/middlewares/ai.middleware";
+import { GeminiServiceImpl } from "./infra/ai/gemini.ai";
 const app = express();
 const port = 8080;
 app.use(express.json());
@@ -15,20 +16,28 @@ app.get("/api/v1/", (req, res) => {
   res.send("Pagina de inicio \nIntenta con post.");
 });
 
-app.post("/api/v1",aiParsing, bodyParsing, async (req, res) => {
-  try {
-    await new ChatManager(
-      new PrismaProductRepository(),
-      new PrismaQuoteItemRepository(),
-      new PrismaQuoteRepository(),
-      new PrismaClientRepository(),
-      new PrismaCompanyRepository()
-    ).start(req.body);
-  } catch (error) {
-    console.log(error);
-    res.json({ message: "Error atrapado en proceso principal", error: error });
+app.post(
+  "/api/v1",
+  aiParsing(new GeminiServiceImpl(), new PrismaQuoteItemRepository()),
+  bodyParsing,
+  async (req, res) => {
+    try {
+      await new ChatManager(
+        new PrismaProductRepository(),
+        new PrismaQuoteItemRepository(),
+        new PrismaQuoteRepository(),
+        new PrismaClientRepository(),
+        new PrismaCompanyRepository()
+      ).start(req.body);
+    } catch (error) {
+      console.log(error);
+      res.json({
+        message: "Error atrapado en proceso principal",
+        error: error,
+      });
+    }
   }
-});
+);
 
 app.listen(port, () => {
   console.log("Server corriendo 🔥");
