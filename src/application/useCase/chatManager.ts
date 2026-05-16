@@ -12,6 +12,7 @@ import { Client } from "../../domain/client";
 import { ChatRequestDTO } from "../dtos/chat.requestDTO";
 import { Intention } from "../types/app.types";
 import { QIStatus } from "../../generated/prisma/enums";
+import type{ BodyReq } from "../dtos/chat.requestDTO";
 export class ChatManager {
   constructor(
     private productRepository: ProductRepository,
@@ -20,8 +21,7 @@ export class ChatManager {
     private clientRepository: ClientRepository,
     private companyRepository: CompanyRepository
   ) {}
-  public async start(body: unknown) {
-    const parseBody = ChatRequestDTO.body(body);
+  public async start(parseBody: BodyReq) {
     let product: Product | null = null;
     let quote: Quote | null = null;
 

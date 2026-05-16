@@ -5,17 +5,17 @@ import { PrismaQuoteItemRepository } from "./infra/db/quoteItemRepository";
 import { PrismaQuoteRepository } from "./infra/db/quoteRepository";
 import { PrismaClientRepository } from "./infra/db/clientRepository";
 import { PrismaCompanyRepository } from "./infra/db/companyRepository";
+import { bodyParsing } from "./application/middlewares/bodyParsing.middleware";
+import { aiParsing } from "./application/middlewares/ai.middleware";
 const app = express();
-
 const port = 8080;
-
 app.use(express.json());
 
 app.get("/api/v1/", (req, res) => {
   res.send("Pagina de inicio \nIntenta con post.");
 });
 
-app.post("/api/v1", async (req, res) => {
+app.post("/api/v1",aiParsing, bodyParsing, async (req, res) => {
   try {
     await new ChatManager(
       new PrismaProductRepository(),
