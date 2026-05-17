@@ -1,31 +1,67 @@
 import { qIParamsSchema, intentionSchema } from "./helpers/productParser";
 import type { QuoteItemParams } from "../../domain/types/domain.types";
-import type { IArtificialInteligence, MessageAnalisysAiType } from "../../domain/ai/iAi";
+import type {
+  IArtificialInteligence,
+  MessageAnalisysAiType,
+} from "../../domain/ai/iAi";
 import { Intention } from "../../application/types/app.types";
 import "dotenv/config";
-import {
-  GoogleGenAI,
-} from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
+import { Product } from "../../domain/product";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+const modelName = "gemini-3.1-flash-lite";
 
 export class GeminiServiceImpl implements IArtificialInteligence {
   async startAnalize(
     message: string,
-    quoteItemParams?: QuoteItemParams
   ): Promise<MessageAnalisysAiType> {
-    let params: QuoteItemParams | undefined;
-    if(quoteItemParams){
-      params = await this.getQuoteItemParams(message, quoteItemParams);
-    } 
     const intention = await this.getClientIntention(message);
+
     return {
       intention,
-      itemParameters: params,
     };
   }
 
-  private async getQuoteItemParams(
+  public async getInferProduct(
+    message: string,
+    productList: Product[]
+  ): Promise<Product | undefined> {
+    const productListString = JSON.stringify(
+      productList.map((product) => ({
+        id: product.id,
+        name: product.name,
+        description: product.description,
+      }))
+    );
+    const prompt = `Estás en una conversación con un cliente. Su último mensaje fue: ${message}.
+Estás realizando la cotización de un producto que el cliente pidió. 
+Tu trabajo es identificar el id del producto al que el usuario hace referencia, la siguiente es la lista
+de productos posibles: ${productListString}.
+Reglas:
+- Retorna el resultado con la siguiente estructura: { "productId": "<id>" }.
+- Solo utiliza la información explícita que el cliente proporcione en su mensaje.
+- No inventes ni asumas valores que el cliente no haya mencionado.
+- Si no se puede relacionar el mensaje con ningun producto retorna la cadena de caracteres: "null".
+`;
+
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      },
+    });
+    if (response.text === undefined) throw new Error("Valio verga gemini");
+    if (response.text.includes("null")) {
+      return undefined;
+    }
+    const json = JSON.parse(response.text);
+    const product = productList.find((product) => product.id === json.productId);
+    return product;
+  }
+
+  public async getQuoteItemParams(
     message: string,
     quoteItemParams: QuoteItemParams | undefined
   ): Promise<QuoteItemParams | undefined> {
@@ -38,14 +74,13 @@ Tu trabajo es identificar qué datos son nulos en la siguiente estructura: ${JSO
 Y aquellos que sean null se reemplzaran por el valor que el cliente asigna en el emnsaje.
 
 Reglas:
-- Convierte las unidades a centimetros
 - Solo utiliza la información explícita que el cliente proporcione en su mensaje.
 - No inventes ni asumas valores que el cliente no haya mencionado.
 - Si un campo no está presente en el mensaje del cliente, asigna exactamente null a ese campo.
 - No reemplaces un material, medida o característica por otra similar: si no está en el mensaje, debe ser null.
 - Devuelve únicamente los datos en el formato de la estructura indicada.`;
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: modelName,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -53,8 +88,6 @@ Reglas:
       },
     });
     if (response.text === undefined) throw new Error("Valio verga gemini");
-    console.log("Response qiparamsSchema: ");
-    console.log(response.text);
     const res = qIParamsSchema.parse(JSON.parse(response.text));
     return res.itemParameters;
   }
@@ -75,7 +108,7 @@ Reglas:
 - Devuelve únicamente los datos en el formato de la estructura indicada.
     `;
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: modelName,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -84,9 +117,7 @@ Reglas:
     });
     if (response.text === undefined)
       throw new Error("El agente IA no pudo determinar la intención");
-    // console.log("Response intention schema");
-    // console.log(response.text);
-    const res = intentionSchema.parse(JSON.parse(response.text))
-    return res.intention
+    const res = intentionSchema.parse(JSON.parse(response.text));
+    return res.intention;
   }
 }

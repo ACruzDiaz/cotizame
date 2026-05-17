@@ -161,8 +161,6 @@ export class QuoteItem {
       ...incoming,
     };
     const areParamsCompleted = this.areParamsCompleted(this._parameters, product.parameters)
-    console.log(new Date());
-    console.log("Are params Completed? " + areParamsCompleted);
     if (areParamsCompleted) {
       this.markParamsCompleted();
       this.setPrice(ItemPriceCalculator.calculateItemPrice(this, product));

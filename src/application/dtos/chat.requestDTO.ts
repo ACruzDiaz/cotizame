@@ -5,20 +5,16 @@ import type { QuoteItemParams, AllowedQuoteItemParams} from "../../domain/types/
 export type BodyReq = {
   clientPhone: string;
   companyPhone: string;
-  productId?: string | undefined;
-  itemParameters?: QuoteItemParams | undefined;
+  message: string;
+  clientName?: string | undefined;
   intention?: Intention | undefined;
 };
-
-const jsonValueSchema: z.ZodType<AllowedQuoteItemParams> = z.lazy(() =>
-  z.union([z.string(), z.number(), z.boolean(), z.null()])
-);
 
 const bodySchema = z.object({
   clientPhone: z.string().regex(/^\+?[0-9]+$/, "Invalid phone number format"),
   companyPhone: z.string().regex(/^\+?[0-9]+$/, "Invalid phone number format"),
-  productId: z.uuid("Invalid UUID").optional(),
-  itemParameters: z.record(z.string(), jsonValueSchema).optional(),
+  message: z.string(),
+  clientName: z.string().optional(),
   intention: z.enum(Intention).optional(),
 });
 

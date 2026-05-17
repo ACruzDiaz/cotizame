@@ -1,11 +1,13 @@
 import type { Intention } from "../../application/types/app.types";
+import type { Product } from "../product";
 import type { QuoteItemParams } from "../types/domain.types";
 
 export type MessageAnalisysAiType = {
-  itemParameters: QuoteItemParams | undefined
   intention: Intention | undefined
 }
 
 export interface IArtificialInteligence {
-  startAnalize(message:string, quoteItemParams?: QuoteItemParams): Promise<MessageAnalisysAiType>
+  startAnalize(message:string): Promise<MessageAnalisysAiType>
+  getInferProduct(message: string, productList: Product[]): Promise<Product | undefined>
+  getQuoteItemParams(message: string, quoteItemParams: QuoteItemParams | undefined): Promise<QuoteItemParams | undefined>
 }

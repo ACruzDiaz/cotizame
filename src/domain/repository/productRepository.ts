@@ -6,4 +6,5 @@ export interface ProductRepository {
   findByID(id: string): Promise<Product | null>;
   getAllFilterByCompany(companyId:string): Promise<Product[]>;
   findByIDAndFilterByCompanyID(productId:string, companyId:string): Promise<Product | null>;
+  getAllFilterByCompanyPhone(companyPhone:string) : Promise<Product[]>;
 }

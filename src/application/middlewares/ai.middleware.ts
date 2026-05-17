@@ -1,18 +1,14 @@
 import type { Request, Response, NextFunction } from "express";
 import type { IArtificialInteligence } from "../../domain/ai/iAi";
-import type { QuoteItemRepository } from "../../domain/repository/quoteItemRepository";
 
-export function aiParsing(aiImpl:IArtificialInteligence, quoteItemRepository: QuoteItemRepository ){
+export function aiParsing(aiImpl:IArtificialInteligence){
   return async(
     req: Request,
     res: Response,
     next: NextFunction,
   ) =>{
     try {
-      const quoteItem = await quoteItemRepository.findUniqueByClientPhoneGroupByStatusFilling(req.body.clientPhone) ?? undefined
-      const result = await aiImpl.startAnalize(req.body.message, quoteItem?.parameters!)
-
-      req.body.itemParameters = result.itemParameters;
+      const result = await aiImpl.startAnalize(req.body.message)
       req.body.intention = result.intention;
       next();
     } catch (error) {
