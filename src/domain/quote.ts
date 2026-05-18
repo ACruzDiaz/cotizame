@@ -145,17 +145,17 @@ export class Quote {
     this.ensureMutable();
 
     const incompleteItems = this._items.some(
-      (item) => item.status !== QIStatus.Done
+      (item) =>
+        item.status !== QIStatus.Done && item.status !== QIStatus.Canceled
     );
 
-    if (incompleteItems) {
-      throw new Error("Cannot calculate total with incomplete items");
-    }
+    this._totalAmount = this._items.reduce((acc, item) => {
+      if (item.status !== QIStatus.Done) {
+        return acc;
+      }
 
-    this._totalAmount = this._items.reduce(
-      (acc, item) => acc + (item.calculatedPrice ?? 0),
-      0
-    );
+      return acc + (item.calculatedPrice ?? 0);
+    }, 0);
   }
 
   //====Domain ACtions====================
@@ -205,9 +205,8 @@ export class Quote {
     if (incompleteItems) {
       throw new Error("All quote items must be completed");
     }
-    if(this._totalAmount === null)
+    if (this._totalAmount === null)
       throw new Error("Total amount mmust be set");
-
 
     if (this._totalAmount !== null && this._totalAmount < 0)
       throw new Error("Total amoun cannot be negative");

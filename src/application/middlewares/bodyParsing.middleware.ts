@@ -11,9 +11,6 @@ export function bodyParsing(
     req.body = parsedBody;
     next();
   } catch (error) {
-    res.status(400).json({
-      message: "Invalid request body",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
+    console.log(error);
   }
 }

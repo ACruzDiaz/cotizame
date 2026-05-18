@@ -13,10 +13,6 @@ export function aiParsing(aiImpl:IArtificialInteligence){
       next();
     } catch (error) {
       console.log(error);
-      res.status(400).json({
-        message: "Error AI comunication",
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
     }
   }
 

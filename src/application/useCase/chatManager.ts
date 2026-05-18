@@ -11,7 +11,7 @@ import { Client } from "../../domain/client";
 
 import { Intention } from "../types/app.types";
 import { QIStatus } from "../../generated/prisma/enums";
-import type { BodyReq } from "../dtos/chat.requestDTO";
+import { createSchema, type BodyReq } from "../dtos/chat.requestDTO";
 import type { IArtificialInteligence } from "../../domain/ai/iAi";
 
 export class ChatManager {
@@ -133,16 +133,16 @@ export class ChatManager {
     }
     //Logica a ejecutar cuando estamos en estado Filling
     if (actualQuoteItem.status === QIStatus.Filling) {
+      const product = await this.productRepository.findByID(actualQuoteItem.productId!)
+      if (!product) throw new Error("Error. El producto seleccionado no existe en la base de datos");
       if (!actualQuoteItem.parameters) throw new Error("Error. No se encontro el quoteItem mas reciente");
-      const itemParams = await this.aiService.getQuoteItemParams(parseBody.message, actualQuoteItem.parameters)
+      const itemParams = await this.aiService.getQuoteItemParams(parseBody.message, actualQuoteItem.parameters, product.parameters)
       
       if (itemParams === undefined) {
         const objKeys = Object.keys(actualQuoteItem.parameters);
         return `Parace ofrecerte una cotización certera necesito los siguiente datos: ${objKeys}`;
       }
       
-      const product = await this.productRepository.findByID(actualQuoteItem.productId!)
-      if (!product) throw new Error("Error. El producto seleccionado no existe en la base de datos");
       actualQuoteItem.addParams(itemParams, product);
       await this.quoteRepository.update(quote.id, quote);
       await this.quoteItemRepository.update(
@@ -154,7 +154,7 @@ export class ChatManager {
       total solamente escribe completar de lo contrario podemos continuar con el siguiente
       articulo.`;
       }
-      return `Llevas estos datos: ${actualQuoteItem.parameters}`;
+      return `Llevas estos datos: ${JSON.stringify(actualQuoteItem.parameters)}`;
     }
 
     //Logica a ejecutar cuando estamos en estado Done

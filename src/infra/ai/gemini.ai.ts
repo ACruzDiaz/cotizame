@@ -1,5 +1,5 @@
 import { qIParamsSchema, intentionSchema } from "./helpers/productParser";
-import type { QuoteItemParams } from "../../domain/types/domain.types";
+import type { AllowedQuoteItemParams, ProductParams, QuoteItemParams } from "../../domain/types/domain.types";
 import type {
   IArtificialInteligence,
   MessageAnalisysAiType,
@@ -8,6 +8,7 @@ import { Intention } from "../../application/types/app.types";
 import "dotenv/config";
 import { GoogleGenAI } from "@google/genai";
 import { Product } from "../../domain/product";
+import { createSchema, parseParams } from "../../application/dtos/chat.requestDTO";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 const modelName = "gemini-3.1-flash-lite";
@@ -63,8 +64,10 @@ Reglas:
 
   public async getQuoteItemParams(
     message: string,
-    quoteItemParams: QuoteItemParams | undefined
-  ): Promise<QuoteItemParams | undefined> {
+    quoteItemParams: QuoteItemParams | undefined,
+    productParameters: ProductParams
+  ): Promise<QuoteItemParams> {
+    const productParamsSchema = createSchema(productParameters)
     const prompt = `
 Estás en una conversación con un cliente. Su último mensaje fue: ${message}.
 Estás realizando la cotización de un producto que el cliente pidió. 
@@ -84,12 +87,14 @@ Reglas:
       contents: prompt,
       config: {
         responseMimeType: "application/json",
-        responseJsonSchema: qIParamsSchema.toJSONSchema(),
+        responseJsonSchema: productParamsSchema.toJSONSchema(),
       },
     });
     if (response.text === undefined) throw new Error("Valio verga gemini");
-    const res = qIParamsSchema.parse(JSON.parse(response.text));
-    return res.itemParameters;
+    const res = parseParams(productParameters, JSON.parse(response.text));
+    return res;
+    // const res = qIParamsSchema.parse(JSON.parse(response.text));
+    // return res.itemParameters;
   }
 
   private async getClientIntention(
@@ -102,7 +107,7 @@ Tu trabajo es identificar si en el actual mensaje la intención del usuario coin
  ${JSON.stringify(Intention)}.
 
 Reglas:
-- Solo utiliza la información explícita que el cliente proporcione en su mensaje.
+- Marca como complete solo cuando este explicitamente escrito en el mensaje.
 - No inventes ni asumas valores que el cliente no haya mencionado.
 - Si ningun valor coincide asigna null.
 - Devuelve únicamente los datos en el formato de la estructura indicada.

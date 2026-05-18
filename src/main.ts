@@ -54,15 +54,10 @@ app.post(
         new PrismaCompanyRepository(),
         new GeminiServiceImpl()
       ).start(req.body);
-      res.status(200).json({
-        message: message,
-      });
+      //Enviar respuesta al cliente
+      console.log(message);
     } catch (error) {
       console.log(error);
-      res.status(400).json({
-        message: "Error atrapado en proceso principal",
-        error: error,
-      });
     }
   }
 );

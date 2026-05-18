@@ -1,6 +1,47 @@
-import z, { string } from "zod";
+import z from "zod";
 import { Intention } from "../types/app.types";
-import type { QuoteItemParams, AllowedQuoteItemParams} from "../../domain/types/domain.types";
+import type {
+  ProductParams,
+  AllowedQuoteItemParams,
+  QuoteItemParams,
+} from "../../domain/types/domain.types";
+
+export function createSchema(baseParams: ProductParams) {
+  const shape: Record<string, z.ZodTypeAny> = {};
+
+  for (const [key, type] of Object.entries(baseParams)) {
+    switch (type) {
+      case "string":
+        shape[key] = z.string().nullable();
+        break;
+
+      case "number":
+        shape[key] = z.number().nullable();
+        break;
+
+      case "boolean":
+        shape[key] = z.boolean().nullable();
+        break;
+
+      default:
+        throw new Error(`Tipo no soportado: ${type}`);
+    }
+  }
+
+  return z.object(shape);
+}
+
+/**
+ * Parsea y valida itemParams
+ */
+export function parseParams(
+  baseParams: ProductParams,
+  itemParams: QuoteItemParams
+): QuoteItemParams {
+  const schema = createSchema(baseParams);
+
+  return schema.parse(itemParams) as QuoteItemParams;
+}
 
 export type BodyReq = {
   clientPhone: string;

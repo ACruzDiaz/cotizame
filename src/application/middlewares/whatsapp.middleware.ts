@@ -8,6 +8,8 @@ export function whatsappWebHook(
 ) {
   try {
     const body = req.body;
+    res.status(200).send('OK')
+
     try {
       const logLine =
         JSON.stringify({
@@ -42,7 +44,7 @@ export function whatsappWebHook(
                 clientPhone: from,
                 clientName: clientName,
               };
-              console.log(`Mensaje recibido de ${JSON.stringify(req.body)}`);
+              console.log(JSON.stringify(req.body));
             }
           }
         });
