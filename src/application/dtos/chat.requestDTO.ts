@@ -66,8 +66,7 @@ export class ChatRequestDTO {
       const res: BodyReq = bodySchema.parse(data);
       return res;
     } catch (error) {
-      console.log("Parse error ChatRequestDTO");
-      throw new Error("Parse error ChatRequestDTO");
+      throw error
     }
   }
 }

@@ -11,6 +11,6 @@ export function bodyParsing(
     req.body = parsedBody;
     next();
   } catch (error) {
-    console.log(error);
+    throw error
   }
 }

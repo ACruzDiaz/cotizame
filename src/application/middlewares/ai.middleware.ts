@@ -12,7 +12,7 @@ export function aiParsing(aiImpl:IArtificialInteligence){
       req.body.intention = result.intention;
       next();
     } catch (error) {
-      console.log(error);
+      throw error
     }
   }
 
