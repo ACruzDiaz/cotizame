@@ -13,9 +13,12 @@ import { GeminiServiceImpl } from "./infra/ai/gemini.ai";
 import { urlencoded, json } from "express";
 import type { IncomingMessage, ServerResponse } from "http";
 import { whatsappWebHook } from "./application/middlewares/whatsapp.middleware";
+import { redisProcessEvent } from "./application/middlewares/redis.middleware";
+import Redis from "ioredis";
 
 const app = express();
 const port = 8080;
+const redis = new Redis(process.env.REDIS_URL!);
 
 app.use(urlencoded({ extended: true }));
 app.use(json({ verify: verifyRequestSignature }));
@@ -42,6 +45,7 @@ app.get("/webhook", (req, res) => {
 app.post(
   "/webhook",
   whatsappWebHook,
+  redisProcessEvent(redis),
   aiParsing(new GeminiServiceImpl()),
   bodyParsing,
   async (req, res) => {
@@ -56,8 +60,13 @@ app.post(
       ).start(req.body);
       //Enviar respuesta al cliente
       console.log(message);
+      
     } catch (error) {
       console.log(error);
+    }finally{
+      console.log('req.body.clientPhone:' + req.body.clientPhone);
+      await redis.del(req.body.clientPhone);
+
     }
   }
 );
@@ -83,10 +92,7 @@ function verifyRequestSignature(
     if (algo !== "sha256" || !signatureHash) {
       throw new Error("Invalid signature format");
     }
-    let expectedHash = Crypto.createHmac(
-      "sha256",
-      process.env.APP_SECRET!
-    )
+    let expectedHash = Crypto.createHmac("sha256", process.env.APP_SECRET!)
       .update(buf)
       .digest("hex");
     if (signatureHash != expectedHash) {

@@ -37,6 +37,7 @@ export function whatsappWebHook(
               const contacts = value?.contacts || [];
               const clientName = contacts[0]?.profile?.name;
               const companyPhone = value?.metadata?.display_phone_number;
+              const timestamp = message.timestamp * 1000;
               if (Date.now() - message.timestamp*1000 > 60_000) {
                 console.log("Evento descartado por antigüedad");
                 return
@@ -47,8 +48,9 @@ export function whatsappWebHook(
                 message: text,
                 clientPhone: from,
                 clientName: clientName,
+                timestamp
               };
-              console.log(JSON.stringify(req.body));
+              // console.log(JSON.stringify(req.body));
             }
           }
         });
@@ -58,6 +60,7 @@ export function whatsappWebHook(
     if(firstMessage) next();
     return
   } catch (error) {
-    console.error("Error procesando webhook de WhatsApp:", error);
+    console.error("Error procesando webhook de WhatsApp:");
+    throw error
   }
 }
