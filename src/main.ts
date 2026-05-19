@@ -15,6 +15,18 @@ import type { IncomingMessage, ServerResponse } from "http";
 import { whatsappWebHook } from "./application/middlewares/whatsapp.middleware";
 import { redisProcessEvent } from "./application/middlewares/redis.middleware";
 import Redis from "ioredis";
+const token = process.env.ACCESS_TOKEN!;
+const phoneNumberId =
+  process.env.WHATSAPP_PHONE_NUMBER_ID!;
+
+const version =
+  process.env.WHATSAPP_API_VERSION ?? "v22.0";
+
+type SendWhatsAppMessageParams = {
+  to: string;
+  message: string;
+};
+
 
 const app = express();
 const port = 8080;
@@ -24,6 +36,7 @@ app.use(urlencoded({ extended: true }));
 app.use(json({ verify: verifyRequestSignature }));
 
 app.get("/webhook", (req, res) => {
+  console.log('webb');
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
@@ -60,7 +73,7 @@ app.post(
       ).start(req.body);
       //Enviar respuesta al cliente
       console.log(message);
-      
+      await sendWhatsAppMessage({to:req.body.clientPhone, message:message??'🧑‍💻🧑‍💻'})
     } catch (error) {
       console.log(error);
     }finally{
@@ -78,6 +91,45 @@ app.listen(port, () => {
 ngrok
   .connect({ addr: port, authtoken: process.env.NGROK_AUTHTOKEN! })
   .then((listener) => console.log(`Ingress established at: ${listener.url()}`));
+
+
+
+
+async function sendWhatsAppMessage({
+  to,
+  message,
+}: SendWhatsAppMessageParams) {
+  const response = await fetch(
+    `https://graph.facebook.com/${version}/${phoneNumberId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: {
+          body: message,
+        },
+      }),
+    },
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error(data);
+
+    throw new Error(
+      "Failed to send WhatsApp message",
+    );
+  }
+
+  return data;
+}
 
 function verifyRequestSignature(
   req: IncomingMessage,

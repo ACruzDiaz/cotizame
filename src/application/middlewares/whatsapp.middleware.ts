@@ -8,6 +8,7 @@ export function whatsappWebHook(
 ) {
   let firstMessage:any = null;
   try {
+    console.log('Recibido');
     const body = req.body;
     res.status(200).send("OK");
 
@@ -50,7 +51,7 @@ export function whatsappWebHook(
                 clientName: clientName,
                 timestamp
               };
-              // console.log(JSON.stringify(req.body));
+              console.log(JSON.stringify(req.body));
             }
           }
         });
