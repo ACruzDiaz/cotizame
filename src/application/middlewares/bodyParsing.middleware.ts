@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { ChatRequestDTO } from "../dtos/chat.requestDTO";
+import { ChatRequestDTO } from "../dtos/chat.requestDTO.js";
 
 export function bodyParsing(
   req: Request,

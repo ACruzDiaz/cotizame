@@ -1,10 +1,10 @@
 import type { InputJsonValue, JsonValue } from "@prisma/client/runtime/client";
-import { Product as ProductEntity } from "../../domain/product";
-import { Prisma, type Product } from "../../generated/prisma/client";
+import { Product as ProductEntity } from "../../domain/product.js";
+import { Prisma, type Product } from "../../generated/prisma/client.js";
 import type {
   ProductParams,
   AllowedProductParams,
-} from "../../domain/types/domain.types";
+} from "../../domain/types/domain.types.js";
 export class ProductMapper {
   static toPersistence(
     product: ProductEntity

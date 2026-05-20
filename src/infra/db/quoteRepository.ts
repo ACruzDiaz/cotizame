@@ -1,9 +1,9 @@
-import { prisma } from "../../application/connection/prismaClient";
-import { QuoteMapper } from "../mappers/quote.mapper";
-import { QuoteItemMapper } from "../mappers/quoteItem.mapper";
-import { Quote as QuoteEntity } from "../../domain/quote";
-import type { QuoteRepository } from "../../domain/repository/quoteRepository";
-import { QuoteStatus } from "../../generated/prisma/enums";
+import { prisma } from "../../application/connection/prismaClient.js";
+import { QuoteMapper } from "../mappers/quote.mapper.js";
+import { QuoteItemMapper } from "../mappers/quoteItem.mapper.js";
+import { Quote as QuoteEntity } from "../../domain/quote.js";
+import type { QuoteRepository } from "../../domain/repository/quoteRepository.js";
+import { QuoteStatus } from "../../generated/prisma/enums.js";
 
 export class PrismaQuoteRepository implements QuoteRepository {
   async save(entity: QuoteEntity): Promise<QuoteEntity> {

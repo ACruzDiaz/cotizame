@@ -1,10 +1,10 @@
 import z from "zod";
-import { Intention } from "../types/app.types";
+import { Intention } from "../types/app.types.js";
 import type {
   ProductParams,
   AllowedQuoteItemParams,
   QuoteItemParams,
-} from "../../domain/types/domain.types";
+} from "../../domain/types/domain.types.js";
 
 export function createSchema(baseParams: ProductParams) {
   const shape: Record<string, z.ZodTypeAny> = {};

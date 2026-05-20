@@ -1,5 +1,5 @@
-import { prisma } from "../../src/application/connection/prismaClient";
-import { UserRole } from "../../src/generated/prisma/enums";
+import { prisma } from "../../src/application/connection/prismaClient.js";
+import { UserRole } from "../../src/generated/prisma/enums.js";
 
 const res = async() =>  await prisma.user.createMany({
   data: [

@@ -1,4 +1,4 @@
-import { prisma } from "../../src/application/connection/prismaClient";
+import { prisma } from "../../src/application/connection/prismaClient.js";
 
 const res = async() => await prisma.client.createMany({
   data: [

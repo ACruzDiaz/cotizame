@@ -1,5 +1,5 @@
-import { Client as ClientEntity } from "../../domain/client";
-import { Prisma, type Client } from "../../generated/prisma/client";
+import { Client as ClientEntity } from "../../domain/client.js";
+import { Prisma, type Client } from "../../generated/prisma/client.js";
 
 export class ClientMapper {
   static toPersistence(client: ClientEntity): Prisma.ClientUncheckedCreateInput {

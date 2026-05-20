@@ -1,14 +1,14 @@
-import { qIParamsSchema, intentionSchema } from "./helpers/productParser";
-import type { AllowedQuoteItemParams, ProductParams, QuoteItemParams } from "../../domain/types/domain.types";
+import { qIParamsSchema, intentionSchema } from "./helpers/productParser.js";
+import type { AllowedQuoteItemParams, ProductParams, QuoteItemParams } from "../../domain/types/domain.types.js";
 import type {
   IArtificialInteligence,
   MessageAnalisysAiType,
-} from "../../domain/ai/iAi";
-import { Intention } from "../../application/types/app.types";
+} from "../../domain/ai/iAi.js";
+import { Intention } from "../../application/types/app.types.js";
 import "dotenv/config";
 import { GoogleGenAI } from "@google/genai";
-import { Product } from "../../domain/product";
-import { createSchema, parseParams } from "../../application/dtos/chat.requestDTO";
+import { Product } from "../../domain/product.js";
+import { createSchema, parseParams } from "../../application/dtos/chat.requestDTO.js";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 const modelName = "gemini-3.1-flash-lite";

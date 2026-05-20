@@ -1,4 +1,4 @@
-import type { CompanyTier } from "../generated/prisma/enums";
+import type { CompanyTier } from "../generated/prisma/enums.js";
 import { validate as validateUUID, v4 as uuidv4 } from "uuid";
 export type CompanyProps = {
   id: string;

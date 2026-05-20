@@ -1,8 +1,8 @@
-import { QIStatus } from "../generated/prisma/enums";
+import { QIStatus } from "../generated/prisma/enums.js";
 import { validate as validateUUID, v4 as uuidv4 } from "uuid";
-import type { ProductParams, QuoteItemParams } from "./types/domain.types";
-import { ItemPriceCalculator } from "./service/itemPriceCalculator";
-import type { Product } from "./product";
+import type { ProductParams, QuoteItemParams } from "./types/domain.types.js";
+import { ItemPriceCalculator } from "./service/itemPriceCalculator.js";
+import type { Product } from "./product.js";
 
 export type QuoteItemProps = {
   id: string;

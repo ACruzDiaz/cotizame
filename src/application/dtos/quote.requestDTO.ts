@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { QuoteStatus } from "../../generated/prisma/client";
+import { QuoteStatus } from "../../generated/prisma/client.js";
 
 const createSchema = z.object({
   companyId: z.uuid("Invalid UUID"),

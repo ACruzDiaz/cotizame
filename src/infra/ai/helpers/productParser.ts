@@ -1,6 +1,6 @@
 import z from "zod";
-import { Intention } from "../../../application/types/app.types";
-import type { AllowedQuoteItemParams } from "../../../domain/types/domain.types";
+import { Intention } from "../../../application/types/app.types.js";
+import type { AllowedQuoteItemParams } from "../../../domain/types/domain.types.js";
 
 
 const jsonValueSchema: z.ZodType<AllowedQuoteItemParams> = z.lazy(() =>

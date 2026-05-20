@@ -1,4 +1,4 @@
-import  { UserRole } from "../generated/prisma/enums";
+import  { UserRole } from "../generated/prisma/enums.js";
 import { v4 as uuidv4 } from "uuid";
 
 export type UserProps = {

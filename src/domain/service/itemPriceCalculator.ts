@@ -1,6 +1,6 @@
-import { Product } from "../product";
-import { QuoteItem } from "../quoteItem";
-import { evaluatePricingDsl } from "../engine/evaluator";
+import { Product } from "../product.js";
+import { QuoteItem } from "../quoteItem.js";
+import { evaluatePricingDsl } from "../engine/evaluator.js";
 //======= Product -> QuoteItem relationship ====================================
 export class ItemPriceCalculator {
   static calculateItemPrice(quoteItem: QuoteItem, product: Product): number {

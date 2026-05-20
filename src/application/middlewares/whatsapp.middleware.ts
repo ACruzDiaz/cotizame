@@ -50,17 +50,17 @@ export function whatsappWebHook(
                 clientName: clientName,
                 timestamp
               };
-              // console.log(JSON.stringify(req.body));
+              console.log(JSON.stringify(req.body));
             }
           }
         });
       });
     }
-    console.log(firstMessage);
-    if(firstMessage) next();
+    if(firstMessage?.id) next();
     return
   } catch (error) {
     console.error("Error procesando webhook de WhatsApp:");
+    console.error(error);
     throw error
   }
 }

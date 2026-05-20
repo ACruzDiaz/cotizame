@@ -1,6 +1,6 @@
-import type { Intention } from "../../application/types/app.types";
-import type { Product } from "../product";
-import type { AllowedQuoteItemParams, ProductParams, QuoteItemParams } from "../types/domain.types";
+import type { Intention } from "../../application/types/app.types.js";
+import type { Product } from "../product.js";
+import type { AllowedQuoteItemParams, ProductParams, QuoteItemParams } from "../types/domain.types.js";
 
 export type MessageAnalisysAiType = {
   intention: Intention | undefined

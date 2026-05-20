@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { UserRole } from "../../generated/prisma/client";
+import { UserRole } from "../../generated/prisma/client.js";
 
 const createSchema = z.object({
   companyId: z.uuid("Invalid UUID"),

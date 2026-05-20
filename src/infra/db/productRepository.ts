@@ -1,7 +1,7 @@
-import { prisma } from "../../application/connection/prismaClient";
-import { ProductMapper } from "../mappers/product.mapper";
-import { Product as ProductEntity } from "../../domain/product";
-import type { ProductRepository } from "../../domain/repository/productRepository";
+import { prisma } from "../../application/connection/prismaClient.js";
+import { ProductMapper } from "../mappers/product.mapper.js";
+import { Product as ProductEntity } from "../../domain/product.js";
+import type { ProductRepository } from "../../domain/repository/productRepository.js";
 
 export class PrismaProductRepository implements ProductRepository {
   async save(entity: ProductEntity): Promise<ProductEntity> {

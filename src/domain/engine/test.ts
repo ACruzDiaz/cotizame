@@ -21,19 +21,3 @@ const params2 = { urgency: false, m2: 60 }; // Should be 100 + 200 = 300
 const params3 = { urgency: true, m2: 60 }; // Should be (100 * 1.5) + 200 = 350
 const params4 = {}; // Should be 100
 
-console.log(
-  "Test 1 (urgency, no m2 > 50):",
-  evaluatePricingDsl(basePrice, dsl, params1) === 150 ? "PASS" : "FAIL",
-);
-console.log(
-  "Test 2 (no urgency, m2 > 50):",
-  evaluatePricingDsl(basePrice, dsl, params2) === 300 ? "PASS" : "FAIL",
-);
-console.log(
-  "Test 3 (urgency, m2 > 50):",
-  evaluatePricingDsl(basePrice, dsl, params3) === 350 ? "PASS" : "FAIL",
-);
-console.log(
-  "Test 4 (no params):",
-  evaluatePricingDsl(basePrice, dsl, params4) === 100 ? "PASS" : "FAIL",
-);
