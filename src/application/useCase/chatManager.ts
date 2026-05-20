@@ -88,8 +88,8 @@ export class ChatManager {
           const pdf = await this.pdfService.generatePdf(
             event.pdfId,
             company,
-            client as Client,
-            quote.items,
+            client,
+            quote,
           );
           await this.pdfStorage.save(event.pdfId, pdf);
         }

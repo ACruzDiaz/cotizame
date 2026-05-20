@@ -4,6 +4,6 @@ export class GeneratedPdfEvent {
   constructor(pdfId: string) {
     if (!pdfId || pdfId.trim() === "") throw new Error("Error. Invalid pdfId");
     this.pdfId = pdfId;
-    this.pdfUrl = `https://localhost:80/quotes/${this.pdfId}.pdf`;
+    this.pdfUrl = `${process.env.BASE_URL_CUSTOMER}/pdfs/${this.pdfId}.pdf`;
   }
 }

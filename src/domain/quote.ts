@@ -153,7 +153,7 @@ export class Quote {
   private generatePdf(): void {
     const pdfId = nanoid();
     this._generatedPdfEvents.push(new GeneratedPdfEvent(pdfId));
-    this._pdfUrl = `https://localhost:80/quotes/${pdfId}.pdf`;
+    this._pdfUrl = `${process.env.BASE_URL_CUSTOMER}/pdfs/${pdfId}.pdf`;
   }
 
   private sumeUpTotalAmount(): void {
