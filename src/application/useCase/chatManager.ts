@@ -13,6 +13,8 @@ import { Intention } from "../types/app.types.js";
 import { QIStatus } from "../../generated/prisma/enums.js";
 import { createSchema, type BodyReq } from "../dtos/chat.requestDTO.js";
 import type { IArtificialInteligence } from "../../domain/ai/iAi.js";
+import type { IPdfService } from "../../domain/service/iPdfService.js";
+import type { IPdfStorage } from "../../domain/service/iPdfStorage.js";
 
 export class ChatManager {
   constructor(
@@ -21,7 +23,9 @@ export class ChatManager {
     private quoteRepository: QuoteRepository,
     private clientRepository: ClientRepository,
     private companyRepository: CompanyRepository,
-    private aiService: IArtificialInteligence
+    private aiService: IArtificialInteligence,
+    private pdfService: IPdfService,
+    private pdfStorage: IPdfStorage,
   ) {}
   public async start(parseBody: BodyReq) {
     let product: Product | null = null;
@@ -29,21 +33,21 @@ export class ChatManager {
 
     //===== Carga de datos ===================================================
     const company: Company | null = await this.companyRepository.findByPhone(
-      parseBody.companyPhone
+      parseBody.companyPhone,
     );
     if (!company)
       throw new Error("Error.No company registered with this phone number");
 
     //Logica de creacion de nuevo cliente
     let client: Client | null = await this.clientRepository.findByPhone(
-      parseBody.clientPhone
+      parseBody.clientPhone,
     );
-    if (!client){
+    if (!client) {
       client = Client.create({
-        clientPhone : parseBody.clientPhone,
-        companyId : company.id,
-      })
-      await this.clientRepository.save(client)
+        clientPhone: parseBody.clientPhone,
+        companyId: company.id,
+      });
+      await this.clientRepository.save(client);
     }
     quote = await this.quoteRepository.findLastPendingByClientId(client.id);
     //Logica de creacion de nueva quote
@@ -78,9 +82,17 @@ export class ChatManager {
     //Logica de completado de quote
     if (parseBody.intention === Intention.complete) {
       if (quote) {
-        quote.setPdfUrl('www.dominio.com/pdf/jsjs9ejejwi');
         quote.complete();
         await this.quoteRepository.update(quote.id, quote);
+        for (const event of quote.generatedPdfEvents) {
+          const pdf = await this.pdfService.generatePdf(
+            event.pdfId,
+            company,
+            client as Client,
+            quote.items,
+          );
+          await this.pdfStorage.save(event.pdfId, pdf);
+        }
       }
       return `Quote completed. You can access to it in following link 👉🏻 ${quote.pdfUrl}`;
     }
@@ -88,20 +100,26 @@ export class ChatManager {
     //======== Logica de estados =======================
 
     const actualQuoteItem = quote.findItem();
-    if (actualQuoteItem === null) throw new Error("Error. No se encontro el QuoteItem actual");
+    if (actualQuoteItem === null)
+      throw new Error("Error. No se encontro el QuoteItem actual");
 
     //Logica a ejecutar cuando estamos en estado Initializing
     if (actualQuoteItem.status === QIStatus.Initializing) {
       const prodList = await this.productRepository.getAllFilterByCompany(
-        company.id
+        company.id,
       );
       if (prodList.length === 0) {
         return `There are not available products for ${company.name}. Call us to give you support.`;
       }
       actualQuoteItem.startSelecting();
       await this.quoteRepository.update(quote.id, quote);
-      await this.quoteItemRepository.update(actualQuoteItem.id, actualQuoteItem);
-      const stringProdList = prodList.map((t) => `- ${t.name}: ${t.description}.`).join("\n");
+      await this.quoteItemRepository.update(
+        actualQuoteItem.id,
+        actualQuoteItem,
+      );
+      const stringProdList = prodList
+        .map((t) => `- ${t.name}: ${t.description}.`)
+        .join("\n");
       return `Welcome to ${company.name}. These are the products we have to offer you. Create a free quotation by selecting the product of your interest:\n
       ${stringProdList}\n If something goes wrong you can cancel anytime and start again.
       `;
@@ -109,17 +127,29 @@ export class ChatManager {
 
     //Logica a ejecutar cuando estamos en estado Selecting
     if (actualQuoteItem.status === QIStatus.Selecting) {
-      const productsList = await this.productRepository.getAllFilterByCompanyPhone(company.phoneNumber)
+      const productsList =
+        await this.productRepository.getAllFilterByCompanyPhone(
+          company.phoneNumber,
+        );
       if (!productsList || productsList.length === 0) {
         return `This company does not have articles yet :(`;
       }
-      const productSelected = await this.aiService.getInferProduct(parseBody.message, productsList)
+      const productSelected = await this.aiService.getInferProduct(
+        parseBody.message,
+        productsList,
+      );
       if (!productSelected) {
         return `I had a problem trying to understand that. What product did you mean?`;
       }
-      actualQuoteItem.assignProduct(productSelected.id, productSelected.parameters);
+      actualQuoteItem.assignProduct(
+        productSelected.id,
+        productSelected.parameters,
+      );
       await this.quoteRepository.update(quote.id, quote);
-      await this.quoteItemRepository.update(actualQuoteItem.id, actualQuoteItem);
+      await this.quoteItemRepository.update(
+        actualQuoteItem.id,
+        actualQuoteItem,
+      );
       return `Product Selected!
       ${productSelected.name}: ${productSelected.description}.
       In order to provide you with an accurate quote, please supply the following details.
@@ -128,22 +158,32 @@ export class ChatManager {
     }
     //Logica a ejecutar cuando estamos en estado Filling
     if (actualQuoteItem.status === QIStatus.Filling) {
-      const product = await this.productRepository.findByID(actualQuoteItem.productId!)
-      if (!product) throw new Error("Error. El producto seleccionado no existe en la base de datos");
-      if (!actualQuoteItem.parameters) throw new Error("Error. No se encontro el quoteItem mas reciente");
-      const itemParams = await this.aiService.getQuoteItemParams(parseBody.message, actualQuoteItem.parameters, product.parameters)
-      
+      const product = await this.productRepository.findByID(
+        actualQuoteItem.productId!,
+      );
+      if (!product)
+        throw new Error(
+          "Error. El producto seleccionado no existe en la base de datos",
+        );
+      if (!actualQuoteItem.parameters)
+        throw new Error("Error. No se encontro el quoteItem mas reciente");
+      const itemParams = await this.aiService.getQuoteItemParams(
+        parseBody.message,
+        actualQuoteItem.parameters,
+        product.parameters,
+      );
+
       if (itemParams === undefined) {
         const objKeys = Object.keys(actualQuoteItem.parameters);
         return `In order to provide you with an accurate quote, please supply the following 'null' details: 
         ${objKeys}`;
       }
-      
+
       actualQuoteItem.addParams(itemParams, product);
       await this.quoteRepository.update(quote.id, quote);
       await this.quoteItemRepository.update(
         actualQuoteItem.id,
-        actualQuoteItem
+        actualQuoteItem,
       );
       if (actualQuoteItem.isParamsCompleted) {
         return `You have completed this article. If you are finished and would like to know the total, simply type “complete.” Otherwise, we can continue with the next article.`;
