@@ -1,5 +1,5 @@
-import { User as UserEntity } from "../../domain/user";
-import { Prisma, type User } from "../../generated/prisma/client";
+import { User as UserEntity } from "../../domain/user.js";
+import { Prisma, type User } from "../../generated/prisma/client.js";
 
 export class UserMapper {
   static toPersistence(user: UserEntity): Prisma.UserUncheckedCreateInput {

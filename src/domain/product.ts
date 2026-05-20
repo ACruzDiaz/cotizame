@@ -1,6 +1,6 @@
-import type { DynamicPricingDsl } from "./engine/dsl.types";
+import type { DynamicPricingDsl } from "./engine/dsl.types.js";
 import { validate as validateUUID, v4 as uuidv4 } from "uuid";
-import type { ProductParams } from "./types/domain.types";
+import type { ProductParams } from "./types/domain.types.js";
 export type ProductProps = {
   id: string;
   companyId: string;

@@ -1,7 +1,7 @@
-import { prisma } from "../../application/connection/prismaClient";
-import { ClientMapper } from "../mappers/client.mapper";
-import { Client as ClientEntity } from "../../domain/client";
-import type { ClientRepository } from "../../domain/repository/clientRepository";
+import { prisma } from "../../application/connection/prismaClient.js";
+import { ClientMapper } from "../mappers/client.mapper.js";
+import { Client as ClientEntity } from "../../domain/client.js";
+import type { ClientRepository } from "../../domain/repository/clientRepository.js";
 
 export class PrismaClientRepository implements ClientRepository {
   async save(entity: ClientEntity): Promise<ClientEntity> {

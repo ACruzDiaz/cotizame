@@ -1,7 +1,7 @@
-import { prisma } from "../../application/connection/prismaClient";
-import { CompanyMapper } from "../mappers/company.mapper";
-import { Company as CompanyEntity } from "../../domain/company";
-import type { CompanyRepository } from "../../domain/repository/companyRepository";
+import { prisma } from "../../application/connection/prismaClient.js";
+import { CompanyMapper } from "../mappers/company.mapper.js";
+import { Company as CompanyEntity } from "../../domain/company.js";
+import type { CompanyRepository } from "../../domain/repository/companyRepository.js";
 
 export class PrismaCompanyRepository implements CompanyRepository {
   async save(entity: CompanyEntity): Promise<CompanyEntity> {

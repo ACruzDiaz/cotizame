@@ -1,10 +1,10 @@
-import { QIStatus, QuoteStatus } from "../generated/prisma/enums";
+import { QIStatus, QuoteStatus } from "../generated/prisma/enums.js";
 import { validate as validateUUID, v4 as uuidv4 } from "uuid";
 import {
   QuoteItem,
   type QuoteItemCreateProps,
   type QuoteItemPersistenceProps,
-} from "./quoteItem";
+} from "./quoteItem.js";
 type Props = {
   id: string;
   companyId: string;

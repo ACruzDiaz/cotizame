@@ -1,7 +1,7 @@
-import { prisma } from "../../application/connection/prismaClient";
-import { QuoteItemMapper } from "../mappers/quoteItem.mapper";
-import { QuoteItem as QuoteItemEntity } from "../../domain/quoteItem";
-import type { QuoteItemRepository } from "../../domain/repository/quoteItemRepository";
+import { prisma } from "../../application/connection/prismaClient.js";
+import { QuoteItemMapper } from "../mappers/quoteItem.mapper.js";
+import { QuoteItem as QuoteItemEntity } from "../../domain/quoteItem.js";
+import type { QuoteItemRepository } from "../../domain/repository/quoteItemRepository.js";
 
 export class PrismaQuoteItemRepository implements QuoteItemRepository {
   async save(entity: QuoteItemEntity): Promise<QuoteItemEntity> {

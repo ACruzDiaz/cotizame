@@ -1,18 +1,18 @@
-import type { CompanyRepository } from "../../domain/repository/companyRepository";
-import type { ProductRepository } from "../../domain/repository/productRepository";
-import type { QuoteItemRepository } from "../../domain/repository/quoteItemRepository";
-import type { QuoteRepository } from "../../domain/repository/quoteRepository";
-import type { ClientRepository } from "../../domain/repository/clientRepository";
+import type { CompanyRepository } from "../../domain/repository/companyRepository.js";
+import type { ProductRepository } from "../../domain/repository/productRepository.js";
+import type { QuoteItemRepository } from "../../domain/repository/quoteItemRepository.js";
+import type { QuoteRepository } from "../../domain/repository/quoteRepository.js";
+import type { ClientRepository } from "../../domain/repository/clientRepository.js";
 
-import { Company } from "../../domain/company";
-import { Product } from "../../domain/product";
-import { Quote } from "../../domain/quote";
-import { Client } from "../../domain/client";
+import { Company } from "../../domain/company.js";
+import { Product } from "../../domain/product.js";
+import { Quote } from "../../domain/quote.js";
+import { Client } from "../../domain/client.js";
 
-import { Intention } from "../types/app.types";
-import { QIStatus } from "../../generated/prisma/enums";
-import { createSchema, type BodyReq } from "../dtos/chat.requestDTO";
-import type { IArtificialInteligence } from "../../domain/ai/iAi";
+import { Intention } from "../types/app.types.js";
+import { QIStatus } from "../../generated/prisma/enums.js";
+import { createSchema, type BodyReq } from "../dtos/chat.requestDTO.js";
+import type { IArtificialInteligence } from "../../domain/ai/iAi.js";
 
 export class ChatManager {
   constructor(
@@ -72,7 +72,7 @@ export class ChatManager {
         await this.quoteRepository.update(quote.id, quote);
         await this.quoteItemRepository.updateMany(quote.items);
       }
-      return "Cotización cancelada";
+      return "We are sorry this went in the wrong direction. Why not you try again?";
     }
 
     //Logica de completado de quote
@@ -82,7 +82,7 @@ export class ChatManager {
         quote.complete();
         await this.quoteRepository.update(quote.id, quote);
       }
-      return `Cotización completada. Puedes verla en el siguiente enlace: ${quote.pdfUrl}`;
+      return `Quote completed. You can access to it in following link 👉🏻 ${quote.pdfUrl}`;
     }
 
     //======== Logica de estados =======================
@@ -96,19 +96,14 @@ export class ChatManager {
         company.id
       );
       if (prodList.length === 0) {
-        return `No se encontraron productos para la empresa ${company.name}`;
+        return `There are not available products for ${company.name}. Call us to give you support.`;
       }
       actualQuoteItem.startSelecting();
       await this.quoteRepository.update(quote.id, quote);
       await this.quoteItemRepository.update(actualQuoteItem.id, actualQuoteItem);
       const stringProdList = prodList.map((t) => `- ${t.name}: ${t.description}.`).join("\n");
-      return `Bienvenido a ${company.name}. Estos son lo productos que 
-      tenemos para ofrecerte. Realiza una cotización totalmente gratis
-      seleccionando el producto de tu interes:\n
-      ${stringProdList}\n
-
-      Cuando elijas tus podructo(s) solo escribe completar para hacerte llegar
-      cotización. Puedes cancelar en cualquier momento.
+      return `Welcome to ${company.name}. These are the products we have to offer you. Create a free quotation by selecting the product of your interest:\n
+      ${stringProdList}\n If something goes wrong you can cancel anytime and start again.
       `;
     }
 
@@ -116,19 +111,19 @@ export class ChatManager {
     if (actualQuoteItem.status === QIStatus.Selecting) {
       const productsList = await this.productRepository.getAllFilterByCompanyPhone(company.phoneNumber)
       if (!productsList || productsList.length === 0) {
-        return `Esta empresa no tiene productos registrados.`;
+        return `This company does not have articles yet :(`;
       }
       const productSelected = await this.aiService.getInferProduct(parseBody.message, productsList)
       if (!productSelected) {
-        return `Error al inferir el producto.`;
+        return `I had a problem trying to understand that. What product did you mean?`;
       }
       actualQuoteItem.assignProduct(productSelected.id, productSelected.parameters);
       await this.quoteRepository.update(quote.id, quote);
       await this.quoteItemRepository.update(actualQuoteItem.id, actualQuoteItem);
-      return `Producto Seleccionado! Elegiste : ${productSelected.name}.\n
-      Detalles: ${productSelected.description}.\n
-      A continuacion debes proporcionarme algunos detalles importantes:\n
-      ${productSelected.parameters}
+      return `Product Selected!
+      ${productSelected.name}: ${productSelected.description}.
+      In order to provide you with an accurate quote, please supply the following details.
+      ${JSON.stringify(productSelected.parameters)}
       `;
     }
     //Logica a ejecutar cuando estamos en estado Filling
@@ -140,7 +135,8 @@ export class ChatManager {
       
       if (itemParams === undefined) {
         const objKeys = Object.keys(actualQuoteItem.parameters);
-        return `Parace ofrecerte una cotización certera necesito los siguiente datos: ${objKeys}`;
+        return `In order to provide you with an accurate quote, please supply the following 'null' details: 
+        ${objKeys}`;
       }
       
       actualQuoteItem.addParams(itemParams, product);
@@ -150,11 +146,9 @@ export class ChatManager {
         actualQuoteItem
       );
       if (actualQuoteItem.isParamsCompleted) {
-        return `Haz completado este articulo. Si has finalizado y quieres saber el
-      total solamente escribe completar de lo contrario podemos continuar con el siguiente
-      articulo.`;
+        return `You have completed this article. If you are finished and would like to know the total, simply type “complete.” Otherwise, we can continue with the next article.`;
       }
-      return `Llevas estos datos: ${JSON.stringify(actualQuoteItem.parameters)}`;
+      return `In order to provide you with an accurate quote, please supply the following 'null' details: ${JSON.stringify(actualQuoteItem.parameters)}`;
     }
 
     //Logica a ejecutar cuando estamos en estado Done
@@ -164,9 +158,7 @@ export class ChatManager {
         productId: undefined,
       });
       await this.quoteItemRepository.save(newItem);
-      return `Haz completado este articulo. Si has finalizado y quieres saber el
-      total solamente escribe completar de lo contrario podemos continuar con el siguiente
-      articulo.`;
+      return `You have completed this article. If you have finished and would like to know the total, simply type “complete.” Otherwise, we can continue with the next article.\nWhat do you want to do?`;
     }
   }
 }

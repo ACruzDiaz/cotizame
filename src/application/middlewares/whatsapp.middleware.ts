@@ -8,7 +8,6 @@ export function whatsappWebHook(
 ) {
   let firstMessage:any = null;
   try {
-    console.log('Recibido');
     const body = req.body;
     res.status(200).send("OK");
 
@@ -57,11 +56,11 @@ export function whatsappWebHook(
         });
       });
     }
-    console.log(firstMessage);
-    if(firstMessage) next();
+    if(firstMessage?.id) next();
     return
   } catch (error) {
     console.error("Error procesando webhook de WhatsApp:");
+    console.error(error);
     throw error
   }
 }

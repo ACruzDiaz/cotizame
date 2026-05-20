@@ -1,5 +1,5 @@
-import { Quote as QuoteEntity } from "../../domain/quote";
-import { Prisma, type Quote } from "../../generated/prisma/client";
+import { Quote as QuoteEntity } from "../../domain/quote.js";
+import { Prisma, type Quote } from "../../generated/prisma/client.js";
 
 export class QuoteMapper {
   static toPersistence(quote: QuoteEntity): Prisma.QuoteUncheckedCreateInput {

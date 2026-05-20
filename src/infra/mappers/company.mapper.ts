@@ -1,5 +1,5 @@
-import { Company as CompanyEntity } from "../../domain/company";
-import { Prisma, type Company } from "../../generated/prisma/client";
+import { Company as CompanyEntity } from "../../domain/company.js";
+import { Prisma, type Company } from "../../generated/prisma/client.js";
 
 export class CompanyMapper {
   static toPersistence(company: CompanyEntity): Prisma.CompanyUncheckedCreateInput {

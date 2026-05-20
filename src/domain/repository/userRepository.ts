@@ -1,4 +1,4 @@
-import { User } from "../user";
+import { User } from "../user.js";
 
 export interface UserRepository {
   save(entity: User): Promise<User>;

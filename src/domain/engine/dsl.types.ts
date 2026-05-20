@@ -37,3 +37,4 @@ export interface PricingRule {
 export interface DynamicPricingDsl {
   rules: PricingRule[];
 }
+

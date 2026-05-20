@@ -1,17 +1,39 @@
-version: "3.9"
-
 services:
   app:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: app
     restart: unless-stopped
     env_file:
       - .env
+    stdin_open: true
+    tty: true
     expose:
       - "3000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks: 
+      - prisma-network 
+
+  prisma-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prisma-studio
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5555:5555"
+    networks:
+      - prisma-network
+    command: >
+      sh -c "pnpm prisma studio --port 5555 --browser none"
+
 
   postgres:
     image: postgres:16-alpine
@@ -23,8 +45,20 @@ services:
       POSTGRES_DB: app
     ports:
       - "5432:5432"
+    networks: 
+      - prisma-network
+    healthcheck: 
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    command: postgres -c listen_addresses='*' 
+    logging: 
+      options: 
+        max-size: "10m"
+        max-file: "3"
 
   redis:
     image: redis:7-alpine
@@ -32,6 +66,8 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
+    networks:
+      - prisma-network
 
   nginx:
     image: nginx:alpine
@@ -43,6 +79,8 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - app
+    networks:
+      - prisma-network
 
   ngrok:
     image: ngrok/ngrok:latest
@@ -51,12 +89,18 @@ services:
     command:
       - "http"
       - "nginx:80"
+      - "--pooling-enabled"
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
     ports:
       - "4040:4040"
     depends_on:
       - nginx
+    networks:
+    - prisma-network
 
+networks: 
+  prisma-network:
+    name: prisma-network
 volumes:
   postgres_data:

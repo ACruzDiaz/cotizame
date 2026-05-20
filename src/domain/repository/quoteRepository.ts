@@ -1,4 +1,4 @@
-import { Quote } from "../quote";
+import { Quote } from "../quote.js";
 
 export interface QuoteRepository {
   save(entity: Quote): Promise<Quote>;

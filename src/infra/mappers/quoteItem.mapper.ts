@@ -1,6 +1,6 @@
-import { QuoteItem as QuoteItemEntity } from "../../domain/quoteItem";
-import { Prisma, type QuoteItem } from "../../generated/prisma/client";
-import type { QuoteItemParams } from "../../domain/types/domain.types";
+import { QuoteItem as QuoteItemEntity } from "../../domain/quoteItem.js";
+import { Prisma, type QuoteItem } from "../../generated/prisma/client.js";
+import type { QuoteItemParams } from "../../domain/types/domain.types.js";
 export class QuoteItemMapper {
   static toPersistence(
     quoteItem: QuoteItemEntity

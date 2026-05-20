@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { CompanyTier } from "../../generated/prisma/client";
+import { CompanyTier } from "../../generated/prisma/client.js";
 
 const createSchema = z.object({
   name: z

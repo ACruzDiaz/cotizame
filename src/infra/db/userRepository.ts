@@ -1,7 +1,7 @@
-import { prisma } from "../../application/connection/prismaClient";
-import { UserMapper } from "../mappers/user.mapper";
-import { User as UserEntity } from "../../domain/user";
-import type { UserRepository } from "../../domain/repository/userRepository";
+import { prisma } from "../../application/connection/prismaClient.js";
+import { UserMapper } from "../mappers/user.mapper.js";
+import { User as UserEntity } from "../../domain/user.js";
+import type { UserRepository } from "../../domain/repository/userRepository.js";
 
 export class PrismaUserRepository implements UserRepository {
   async save(entity: UserEntity): Promise<UserEntity> {

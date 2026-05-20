@@ -1,4 +1,4 @@
-import { prisma } from "../../src/application/connection/prismaClient";
+import { prisma } from "../../src/application/connection/prismaClient.js";
 
 const res = async() => await prisma.product.createMany({
   data: [
@@ -66,7 +66,7 @@ const res = async() => await prisma.product.createMany({
       companyId: "295f5058-e9b1-436a-9a61-a36acc002914",
       name: "Interior cleaning",
       parameters: {
-        seats_number: "numeric",
+        seats_number: "number",
         ozone_sanitization: "boolean",
         fragance:"boolean",
       },

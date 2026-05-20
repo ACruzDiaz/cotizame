@@ -1,5 +1,5 @@
-import { prisma } from "../../src/application/connection/prismaClient";
-import { CompanyTier } from "../../src/generated/prisma/enums";
+import { prisma } from "../../src/application/connection/prismaClient.js";
+import { CompanyTier } from "../../src/generated/prisma/enums.js";
 
 const res = async() =>  await prisma.company.createMany({
   data:[{
