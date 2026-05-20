@@ -1,10 +1,12 @@
 import { QIStatus, QuoteStatus } from "../generated/prisma/enums.js";
 import { validate as validateUUID, v4 as uuidv4 } from "uuid";
+import { nanoid } from "nanoid";
 import {
   QuoteItem,
   type QuoteItemCreateProps,
   type QuoteItemPersistenceProps,
 } from "./quoteItem.js";
+import { GeneratedPdfEvent } from "./events/generatePdf.event.js";
 type Props = {
   id: string;
   companyId: string;
@@ -39,6 +41,7 @@ export class Quote {
   private _pdfUrl: string | null;
   private readonly _items: QuoteItem[];
   private readonly _createdAt: Date;
+  private _generatedPdfEvents: GeneratedPdfEvent[] = [];
 
   private static readonly transitions: Record<QuoteStatus, QuoteStatus[]> = {
     [QuoteStatus.Pending]: [QuoteStatus.Canceled, QuoteStatus.Complete],
@@ -98,13 +101,17 @@ export class Quote {
   /* =========================================================
      ITEM MANAGEMENT
   ========================================================= */
-
+  /**
+   * Adds a new empty quoteItem to the quote
+   * @param {QuoteItemCreateProps} props - The properties of the quoteItem
+   * @returns {QuoteItem} The created quoteItem
+   */
   addItem(props: QuoteItemCreateProps): QuoteItem {
     this.ensureMutable();
     const currentQuoteItem = this.findMutableItem();
     if (currentQuoteItem) {
       throw new Error(
-        "You have incomplete quoteItems that need to be completed first"
+        "You have incomplete quoteItems that need to be completed first",
       );
     }
     const item = QuoteItem.create(this._id, props);
@@ -119,35 +126,37 @@ export class Quote {
 
     this._items.splice(
       this._items.findIndex((x) => x.id === itemId),
-      1
+      1,
     );
   }
-
+  /**
+   * Finds the last quoteItem. Order by creation date
+   * @returns {QuoteItem | null} The last quoteItem
+   */
   findItem(): QuoteItem | null {
     return this._items.reduce((prev, curr) =>
-      curr.createdAt.getTime() > prev.createdAt.getTime() ? curr : prev
+      curr.createdAt.getTime() > prev.createdAt.getTime() ? curr : prev,
     );
   }
+  /**
+   * Finds the last quoteItem that is not Canceled or Done
+   * @returns {QuoteItem | null} The last quoteItem that is not Canceled or Done
+   */
   private findMutableItem(): QuoteItem | null {
     const item = this._items.find(
-      (x) => x.status !== QIStatus.Canceled && x.status !== QIStatus.Done
+      (x) => x.status !== QIStatus.Canceled && x.status !== QIStatus.Done,
     );
     return item ?? null;
   }
 
-  //Mientras solamente sera un texto que se responde al finalizar el quote
-  setPdfUrl(url: string): void {
-    this.ensureMutable();
-    this._pdfUrl = url;
+  //Debe de producit un evento de dominio para que el servicio de pdf lo capture y genere el pdf
+  private generatePdf(): void {
+    const pdfId = nanoid();
+    this._generatedPdfEvents.push(new GeneratedPdfEvent(pdfId));
+    this._pdfUrl = `${process.env.BASE_URL_CUSTOMER}/pdfs/${pdfId}.pdf`;
   }
 
-  setCalculatedTotalAmount(): void {
-    this.ensureMutable();
-
-    const incompleteItems = this._items.some(
-      (item) =>
-        item.status !== QIStatus.Done && item.status !== QIStatus.Canceled
-    );
+  private sumeUpTotalAmount(): void {
 
     this._totalAmount = this._items.reduce((acc, item) => {
       if (item.status !== QIStatus.Done) {
@@ -161,7 +170,9 @@ export class Quote {
   //====Domain ACtions====================
 
   complete(): void {
-    this.setCalculatedTotalAmount();
+    this.ensureMutable();
+    this.generatePdf();
+    this.sumeUpTotalAmount();
     this.transitionTo(QuoteStatus.Complete);
   }
 
@@ -199,7 +210,7 @@ export class Quote {
     }
 
     const incompleteItems = this._items.some(
-      (item) => item.status !== QIStatus.Done
+      (item) => item.status !== QIStatus.Done,
     );
 
     if (incompleteItems) {
@@ -247,6 +258,10 @@ export class Quote {
   }
   get clientId(): string {
     return this._clientId;
+  }
+
+  get generatedPdfEvents(): ReadonlyArray<GeneratedPdfEvent> {
+    return this._generatedPdfEvents;
   }
 
   get status(): QuoteStatus {

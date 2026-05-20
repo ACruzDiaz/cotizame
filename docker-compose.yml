@@ -16,6 +16,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+    volumes:
+      - ./quotes:/pdfs
     networks: 
       - prisma-network 
 
@@ -77,6 +79,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./quotes:/pdfs
     depends_on:
       - app
     networks:

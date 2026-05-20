@@ -176,7 +176,7 @@ export class QuoteItem {
   startFilling(): void {
     this.transitionTo(QIStatus.Filling);
   }
-
+  //TODO: Check if this method is needed to be public
   complete(): void {
     this.transitionTo(QIStatus.Done);
   }
