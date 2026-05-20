@@ -103,8 +103,11 @@ export class QuoteItem {
     return new QuoteItem(full);
   }
 
-  //El caller se miraria algo como QI.setCalculatePrice(ItemPriceCalculator.calculateItemPrice(quoteItem, product))
-  setPrice(price: number): void {
+  /*
+   * @deprecated
+   * Use intented only for internal use and test
+   */
+  _setPrice(price: number): void {
     this.ensureMutable();
 
     if (price < 0) {
@@ -124,7 +127,11 @@ export class QuoteItem {
     this.transitionTo(QIStatus.Done);
   }
 
-  markParamsCompleted(): void {
+  /*
+   * @deprecated
+   * Use intented only for internal use and test
+   */
+  _markParamsCompleted(): void {
     this.ensureMutable();
     if (!validateUUID(this._productId))
       throw new Error("Product ID must be a valid UUID");
@@ -144,7 +151,7 @@ export class QuoteItem {
 
   private initNullParams(productParams: ProductParams): Record<string, null> {
     return Object.fromEntries(
-      Object.keys(productParams).map((key) => [key, null])
+      Object.keys(productParams).map((key) => [key, null]),
     );
   }
 
@@ -160,10 +167,13 @@ export class QuoteItem {
       ...current,
       ...incoming,
     };
-    const areParamsCompleted = this.areParamsCompleted(this._parameters, product.parameters)
+    const areParamsCompleted = this.areParamsCompleted(
+      this._parameters,
+      product.parameters,
+    );
     if (areParamsCompleted) {
-      this.markParamsCompleted();
-      this.setPrice(ItemPriceCalculator.calculateItemPrice(this, product));
+      this._markParamsCompleted();
+      this._setPrice(ItemPriceCalculator.calculateItemPrice(this, product));
     }
   }
 
@@ -173,11 +183,11 @@ export class QuoteItem {
     this.transitionTo(QIStatus.Selecting);
   }
 
-  startFilling(): void {
+  private startFilling(): void {
     this.transitionTo(QIStatus.Filling);
   }
   //TODO: Check if this method is needed to be public
-  complete(): void {
+  private complete(): void {
     this.transitionTo(QIStatus.Done);
   }
 
@@ -260,9 +270,8 @@ export class QuoteItem {
 
   private areParamsCompleted(
     current: QuoteItemParams,
-    base: ProductParams
+    base: ProductParams,
   ): boolean {
-
     const currentKeys = Object.keys(current);
     const baseKeys = Object.keys(base);
 

@@ -21,3 +21,6 @@ dbml
 
 # PDFs
 *.pdf
+
+#Nginx partition
+quotes

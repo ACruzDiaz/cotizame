@@ -245,9 +245,6 @@ export class Quote {
     }
   }
 
-  getLastItem(): QuoteItem | null {
-    return this._items.length > 0 ? this._items[this._items.length - 1]! : null;
-  }
   //====Getters =======================================
 
   get id(): string {

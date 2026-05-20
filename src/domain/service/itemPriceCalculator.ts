@@ -12,9 +12,4 @@ export class ItemPriceCalculator {
       quoteItem.parameters
     );
   }
-
-  // static setParams(quoteItem: QuoteItem, product: Product){
-  //   quoteItem._assignProduct(product.id);
-  //   quoteItem.addParams
-  // }
 }
