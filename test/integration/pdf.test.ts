@@ -53,8 +53,6 @@ describe("PdfService Integration Test", () => {
       clientId: client.id,
     });
 
-    // We can manually add items or use fromPersistence to create a quote with ready items
-    // Since we are testing pdfService, we just need the items array to have data
     const quoteItem = quote.addItem({
       parameters: undefined,
       productId: undefined,
@@ -76,9 +74,6 @@ describe("PdfService Integration Test", () => {
     quoteItem2.setPrice(10);
 
     quote.complete();
-    // Since addItem returns a QuoteItem, we can't directly mutate it here without breaking encapsulation,
-    // but pdfService just reads. Let's see if we can use it as is.
-    // If calculatedPrice is undefined, it'll just render "undefined". It's fine for the test.
 
     const pdfBuffer = await pdfService.generatePdf(
       pdfId,
