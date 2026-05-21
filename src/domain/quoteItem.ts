@@ -3,6 +3,7 @@ import { validate as validateUUID, v4 as uuidv4 } from "uuid";
 import type { ProductParams, QuoteItemParams } from "./types/domain.types.js";
 import { ItemPriceCalculator } from "./service/itemPriceCalculator.js";
 import type { Product } from "./product.js";
+import logger from "../application/connection/logger.dev.js";
 
 export type QuoteItemProps = {
   id: string;
@@ -75,7 +76,7 @@ export class QuoteItem {
       createdAt: new Date(),
       isParamsCompleted: false,
     };
-
+    logger.debug("Quote item 'create' static method")
     return new QuoteItem(full);
   }
 
@@ -99,7 +100,7 @@ export class QuoteItem {
       createdAt: props.createdAt,
       isParamsCompleted: props.isParamsCompleted,
     };
-
+    logger.debug("Quote Item 'fromPersistence' static method")
     return new QuoteItem(full);
   }
 
@@ -145,6 +146,7 @@ export class QuoteItem {
 
     this._productId = productId;
     this._parameters = this.initNullParams(productParams);
+    logger.debug(`The product ${this._productId} has been set to quote Item: ${this._id} in memory`)
 
     this.transitionTo(QIStatus.Filling);
   }
@@ -175,6 +177,7 @@ export class QuoteItem {
       this._markParamsCompleted();
       this._setPrice(ItemPriceCalculator.calculateItemPrice(this, product));
     }
+    logger.debug(`The quote Item isParamsComplete is: ${this._isParamsCompleted} in memory`)
   }
 
   //====Domain Actions====================

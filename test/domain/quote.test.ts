@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Quote } from "../../src/domain/quote.js";
-import { QIStatus, QuoteStatus } from "../../src/generated/prisma/enums";
-import { QuoteItem } from "../../src/domain/quoteItem";
+import { QuoteStatus } from "../../src/generated/prisma/enums.js";
 
 //====Helpers===========
 

@@ -7,6 +7,8 @@ import {
   type QuoteItemPersistenceProps,
 } from "./quoteItem.js";
 import { GeneratedPdfEvent } from "./events/generatePdf.event.js";
+import logger from "../application/connection/logger.dev.js";
+
 type Props = {
   id: string;
   companyId: string;
@@ -75,6 +77,7 @@ export class Quote {
     // full.items.push(
     //   QuoteItem.create(full.id, { parameters: undefined, productId: undefined })
     // );
+    logger.debug("Quote 'created' static method")
     return new Quote(full);
   }
 
@@ -95,6 +98,7 @@ export class Quote {
       items: items,
       createdAt: props.createdAt,
     };
+    logger.debug("Quote 'fromPersistence' static method")
     return new Quote(full);
   }
 
@@ -123,20 +127,22 @@ export class Quote {
 
   removeItem(itemId: string): void {
     this.ensureMutable();
-
     this._items.splice(
       this._items.findIndex((x) => x.id === itemId),
       1,
     );
+    logger.debug(`Item (${itemId}) removed from quote (${this._id}) in memory`)
   }
   /**
    * Finds the last quoteItem. Order by creation date
    * @returns {QuoteItem | null} The last quoteItem
    */
   findItem(): QuoteItem | null {
-    return this._items.reduce((prev, curr) =>
+    const lastItem = this._items.reduce((prev, curr) =>
       curr.createdAt.getTime() > prev.createdAt.getTime() ? curr : prev,
     );
+    logger.debug(`Found last item of Quote: ${this._id} in memory. Item ID: ${lastItem.id}`)
+    return lastItem
   }
   /**
    * Finds the last quoteItem that is not Canceled or Done
@@ -194,6 +200,7 @@ export class Quote {
 
     this.validateTransitionRequirements(nextState);
     this._status = nextState;
+    logger.debug(`Successful transition from ${this._status} -> ${nextState}`)
   }
 
   private validateTransitionRequirements(next: QuoteStatus): void {

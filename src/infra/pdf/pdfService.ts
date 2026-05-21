@@ -3,7 +3,7 @@ import type { IPdfService } from "../../domain/service/iPdfService.js";
 import { Company } from "../../domain/company.js";
 import { Client } from "../../domain/client.js";
 import { Quote } from "../../domain/quote.js";
-
+import logger from "../../application/connection/logger.dev.js";
 export class PdfService implements IPdfService {
   public async generatePdf(
     pdfId: string,

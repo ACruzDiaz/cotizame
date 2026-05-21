@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-
+import logger  from "../application/connection/logger.dev.js";
 export type ClientProps = {
   id: string;
   companyId: string;
@@ -45,7 +45,7 @@ export class Client {
       name: props.name === undefined ? null : props.name,
       registeredAt: new Date(),
     };
-
+    logger.debug("Client from 'create' static method")
     return new Client(full);
   }
 
@@ -57,7 +57,7 @@ export class Client {
       name: props.name === undefined ? null : props.name,
       registeredAt: props.registeredAt,
     };
-
+    logger.debug("Client from 'persistence' static method")
     return new Client(full);
   }
 
