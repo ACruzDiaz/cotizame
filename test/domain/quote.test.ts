@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Quote } from "../../src/domain/quote.js";
-import { QIStatus, QuoteStatus } from "../../src/generated/prisma/enums";
-import { QuoteItem } from "../../src/domain/quoteItem";
+import { QuoteStatus } from "../../src/generated/prisma/enums.js";
 
 //====Helpers===========
 
@@ -104,24 +103,27 @@ describe("Quote", () => {
       productId: undefined,
     });
 
-    quoteItem.startSelecting()
-    quoteItem.assignProduct("18dca623-e34c-49ca-aa6a-40e046bf3b0f", { test: "boolean" });
-    quoteItem.markParamsCompleted();
-    quoteItem.setPrice(10);
+    quoteItem.startSelecting();
+    quoteItem.assignProduct("18dca623-e34c-49ca-aa6a-40e046bf3b0f", {
+      test: "boolean",
+    });
+    quoteItem._markParamsCompleted();
+    quoteItem._setPrice(10);
 
     const quoteItem2 = quote.addItem({
       parameters: { test: "test" },
       productId: "18dca623-e34c-49ca-aa6a-40e046bf3b0f",
     });
 
-    quoteItem2.startSelecting()
-    quoteItem2.assignProduct("18dca623-e34c-49ca-aa6a-40e046bf3b0f", { test: "boolean" });
-    quoteItem2.markParamsCompleted();
-    quoteItem2.setPrice(10);
+    quoteItem2.startSelecting();
+    quoteItem2.assignProduct("18dca623-e34c-49ca-aa6a-40e046bf3b0f", {
+      test: "boolean",
+    });
+    quoteItem2._markParamsCompleted();
+    quoteItem2._setPrice(10);
 
     quote.complete();
     expect(quote.totalAmount).toBe(20);
     expect(quote.status).toBe(QuoteStatus.Complete);
   });
-
 });
