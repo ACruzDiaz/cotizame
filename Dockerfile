@@ -10,8 +10,9 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
-
-RUN pnpm run build 
+ARG DATABASE_URL="postgresql://fake:fake@localhost:5432/fake"
+ENV DATABASE_URL=$DATABASE_URL
+RUN pnpm prisma generate && pnpm run build
 
 # Etapa final (runtime)
 FROM node:20-alpine AS runtime

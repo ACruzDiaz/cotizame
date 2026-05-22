@@ -4,4 +4,6 @@ dist
 .env
 webhooks.log
 *.pdf
+.antigravitycli
+quotes
 quotes
