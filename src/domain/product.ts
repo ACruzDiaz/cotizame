@@ -1,6 +1,7 @@
 import type { DynamicPricingDsl } from "./engine/dsl.types.js";
-import { validate as validateUUID, v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import type { ProductParams } from "./types/domain.types.js";
+import logger from "../application/connection/logger.dev.js";
 export type ProductProps = {
   id: string;
   companyId: string;
@@ -96,11 +97,14 @@ export class Product {
   deleteProduct() {
     this.ensureMutable();
     this._deletedAt = new Date();
+    logger.debug("Product in memory deleted")
   }
 
   setNote(content: string) {
     this.ensureMutable();
     this._notes = content;
+    logger.debug("Product's note set in memory")
+
   }
 
   //===== Helpers =============================

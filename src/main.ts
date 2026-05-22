@@ -16,6 +16,7 @@ import type { IncomingMessage, ServerResponse } from "http";
 import { whatsappWebHook } from "./application/middlewares/whatsapp.middleware.js";
 import { redisProcessEvent } from "./application/middlewares/redis.middleware.js";
 import Redis from "ioredis";
+import logger from "./application/connection/logger.dev.js";
 const token = process.env.ACCESS_TOKEN!;
 const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID!;
 
@@ -46,13 +47,14 @@ app.get("/webhook", (req, res) => {
 
   if (mode && token) {
     if (token === VERIFY_TOKEN) {
-      console.log("WEBHOOK_VERIFIED");
+      logger.info("GET 200 /webhook. Token successfully verified.")
       return res.status(200).send(challenge);
     } else {
+    logger.error("GET 403 /webhook. No valid token")
       return res.sendStatus(403);
     }
   }
-
+  logger.error("GET 400 /webhook. mode or token not receive in request.")
   return res.sendStatus(400);
 });
 
@@ -74,14 +76,14 @@ app.post(
         new PdfService(),
         new PdfStorageService(),
       ).start(req.body);
-      //Enviar respuesta al cliente
-      console.log(message);
+
       await sendWhatsAppMessage({
         to: req.body.clientPhone,
         message: message ?? "🧑‍💻🧑‍💻",
       });
+      logger.info(`Responded to the customer successfully`)
     } catch (error) {
-      console.log(error);
+      logger.error(error)
     } finally {
       await redis.del(req.body.clientPhone);
     }
@@ -89,7 +91,7 @@ app.post(
 );
 
 app.listen(port, "0.0.0.0", () => {
-  console.log("Node Server corriendo 🔥");
+  logger.info(`Node server running at 0.0.0.0:${port}`)
 });
 
 // ngrok

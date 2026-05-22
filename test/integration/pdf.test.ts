@@ -20,7 +20,7 @@ describe("PdfService Integration Test", () => {
     }
     const product = Product.create({
       name: "Product 1",
-      parameters: { test: "boolean", test2: "boolean" , test3: "boolean"  },
+      parameters: { test: "boolean", test2: "boolean", test3: "boolean" },
       basePrice: 10,
       companyId: "18dca623-e34c-49ca-aa6a-40e046bf3b0f",
       dynamicPricingDsl: {
@@ -28,8 +28,8 @@ describe("PdfService Integration Test", () => {
           {
             conditions: [{ field: "test", operator: "eq", value: true }],
             action: { operator: "multiply", value: 1.5 },
-          }
-        ]
+          },
+        ],
       },
       description: "Product 1 description",
       notes: "Product 1 notes",
@@ -58,20 +58,26 @@ describe("PdfService Integration Test", () => {
       productId: undefined,
     });
 
-    quoteItem.startSelecting()
-    quoteItem.assignProduct("18dca623-e34c-49ca-aa6a-40e046bf3b0f", { test: "boolean", test2: "boolean", test3: "boolean" });
-    quoteItem.markParamsCompleted();
-    quoteItem.setPrice(10);
-    
+    quoteItem.startSelecting();
+    quoteItem.assignProduct("18dca623-e34c-49ca-aa6a-40e046bf3b0f", {
+      test: "boolean",
+      test2: "boolean",
+      test3: "boolean",
+    });
+    quoteItem._markParamsCompleted();
+    quoteItem._setPrice(10);
+
     const quoteItem2 = quote.addItem({
       parameters: undefined,
       productId: undefined,
     });
 
-    quoteItem2.startSelecting()
-    quoteItem2.assignProduct("18dca623-e34c-49ca-aa6a-40e046bf310f", { test: "boolean" });
-    quoteItem2.markParamsCompleted();
-    quoteItem2.setPrice(10);
+    quoteItem2.startSelecting();
+    quoteItem2.assignProduct("18dca623-e34c-49ca-aa6a-40e046bf310f", {
+      test: "boolean",
+    });
+    quoteItem2._markParamsCompleted();
+    quoteItem2._setPrice(10);
 
     quote.complete();
 

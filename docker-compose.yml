@@ -4,6 +4,12 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: app
+    logging:
+      driver: fluentd          # ← usa el driver de fluentd en vez del default
+      options:
+        fluentd-address: localhost:24224   # ← a dónde mandar los logs
+        tag: app   
+        fluentd-async: "true"
     restart: unless-stopped
     env_file:
       - .env
@@ -47,6 +53,12 @@ services:
       POSTGRES_DB: app
     ports:
       - "5432:5432"
+    logging:
+      driver: fluentd         
+      options:
+        fluentd-address: localhost:24224
+        tag: postgres   
+        fluentd-async: "true"
     networks: 
       - prisma-network
     healthcheck: 
@@ -57,10 +69,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     command: postgres -c listen_addresses='*' 
-    logging: 
-      options: 
-        max-size: "10m"
-        max-file: "3"
+
 
   redis:
     image: redis:7-alpine
@@ -82,6 +91,12 @@ services:
       - ./quotes:/pdfs
     depends_on:
       - app
+    logging:
+      driver: fluentd          # ← usa el driver de fluentd en vez del default
+      options:
+        fluentd-address: localhost:24224   # ← a dónde mandar los logs
+        tag: nginx
+        fluentd-async: "true"
     networks:
       - prisma-network
 
@@ -102,8 +117,59 @@ services:
     networks:
     - prisma-network
 
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki
+    restart: unless-stopped
+    user: "10001:10001"
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./logging/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/loki-config.yml
+    networks:
+      - prisma-network
+
+ 
+      
+  fluent-bit:
+    image: fluent/fluent-bit:3.0
+    container_name: fluent-bit
+    restart: unless-stopped
+    ports:
+      - "24224:24224"      # Recibe logs via fluentd driver
+      - "24224:24224/udp"
+    volumes:
+      - ./logging/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./logging/parsers.conf:/fluent-bit/etc/parsers.conf:ro
+    depends_on:
+      - loki
+    networks:
+      - prisma-network
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./logging/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - loki
+    networks:
+      - prisma-network
+
 networks: 
   prisma-network:
     name: prisma-network
 volumes:
   postgres_data:
+  loki_data:
+  grafana_data:
