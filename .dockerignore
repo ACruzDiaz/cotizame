@@ -21,3 +21,7 @@ dbml
 
 # PDFs
 *.pdf
+
+.antigravitycli
+#Nginx partition
+quotes

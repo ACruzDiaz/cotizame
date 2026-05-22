@@ -5,6 +5,7 @@ import type {
   AllowedQuoteItemParams,
   QuoteItemParams,
 } from "../../domain/types/domain.types.js";
+import logger from "../connection/logger.dev.js";
 
 export function createSchema(baseParams: ProductParams) {
   const shape: Record<string, z.ZodTypeAny> = {};
@@ -64,6 +65,7 @@ export class ChatRequestDTO {
   public static body(data: unknown) {
     try {
       const res: BodyReq = bodySchema.parse(data);
+      logger.debug("Succesfully req.body parsed")
       return res;
     } catch (error) {
       throw error

@@ -1,5 +1,6 @@
 import fs from "fs";
 import type { Request, Response, NextFunction } from "express";
+import logger from "../connection/logger.dev.js";
 
 export function whatsappWebHook(
   req: Request,
@@ -18,10 +19,10 @@ export function whatsappWebHook(
           payload: body,
         }) + "\n";
       fs.appendFile("webhooks.log", logLine, (err) => {
-        if (err) console.error("Error saving webhook payload:", err);
+        if (err) logger.error("Error saving webhook payload:", err);
       });
     } catch (err) {
-      console.error("Error writing webhook log:", err);
+      throw new Error("Error writing webhook log:" + err);
     }
 
     if (body && body.object === "whatsapp_business_account") {
@@ -39,7 +40,7 @@ export function whatsappWebHook(
               const companyPhone = value?.metadata?.display_phone_number;
               const timestamp = message.timestamp * 1000;
               if (Date.now() - message.timestamp*1000 > 60_000) {
-                console.log("Evento descartado por antigüedad");
+                logger.info("Mensaje descartado por antigüedad");
                 return
               }
               // Construir el body esperado por ChatManager
@@ -50,7 +51,6 @@ export function whatsappWebHook(
                 clientName: clientName,
                 timestamp
               };
-              console.log(JSON.stringify(req.body));
             }
           }
         });
@@ -59,8 +59,6 @@ export function whatsappWebHook(
     if(firstMessage?.id) next();
     return
   } catch (error) {
-    console.error("Error procesando webhook de WhatsApp:");
-    console.error(error);
     throw error
   }
 }

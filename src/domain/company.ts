@@ -1,5 +1,6 @@
 import type { CompanyTier } from "../generated/prisma/enums.js";
-import { validate as validateUUID, v4 as uuidv4 } from "uuid";
+import {  v4 as uuidv4 } from "uuid";
+import logger from "../application/connection/logger.dev.js";
 export type CompanyProps = {
   id: string;
   phoneNumber: string;
@@ -55,7 +56,7 @@ export class Company {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-
+    logger.debug("Company from 'create' static method");
     return new Company(full);
   }
 
@@ -69,7 +70,7 @@ export class Company {
       createdAt: props.createdAt,
       updatedAt: props.updatedAt,
     };
-
+    logger.debug("Company from 'fromPersistence' static method");
     return new Company(full);
   }
 
