@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "pnpm prisma generate && tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "start": "node dist/src/main.js",
     "dev": "tsx src/main.ts",
     "test": "vitest",
@@ -38,6 +38,7 @@
     "nanoid": "^5.1.11",
     "prisma": "^7.6.0",
     "testcontainers": "^11.14.0",
+    "tsc-alias": "^1.8.17",
     "tsx": "^3.12.7",
     "uuid": "^14.0.0",
     "zod": "^4.3.6",
